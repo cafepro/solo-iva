@@ -21,7 +21,11 @@ class ParsePdfInvoice
   private
 
   def needs_fallback?(result)
-    result.invoice_number.nil? || result.invoice_date.nil? || result.lines.empty?
+    result.invoice_number.nil? ||
+      result.invoice_date.nil? ||
+      result.lines.empty? ||
+      result.issuer_name.nil? ||
+      result.issuer_nif.nil?
   end
 
   def gemini_fallback(text)
