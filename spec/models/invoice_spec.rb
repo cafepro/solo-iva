@@ -10,6 +10,19 @@ RSpec.describe Invoice, type: :model do
     it { is_expected.to validate_presence_of(:invoice_type) }
     it { is_expected.to validate_presence_of(:invoice_date) }
     it { is_expected.to validate_presence_of(:invoice_number) }
+
+    it "rejects duplicate invoice_number for the same user and type" do
+      existing = create(:invoice, invoice_number: "F-001", invoice_type: :emitida)
+      duplicate = build(:invoice, user: existing.user, invoice_number: "F-001", invoice_type: :emitida)
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:invoice_number]).to be_present
+    end
+
+    it "allows same invoice_number for different types" do
+      existing = create(:invoice, invoice_number: "F-001", invoice_type: :emitida)
+      other = build(:invoice, user: existing.user, invoice_number: "F-001", invoice_type: :recibida)
+      expect(other).to be_valid
+    end
   end
 
   describe "#totals" do

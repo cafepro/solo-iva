@@ -6,6 +6,8 @@ class Invoice < ApplicationRecord
   enum :invoice_type, { emitida: 0, recibida: 1 }
 
   validates :invoice_type, :invoice_date, :invoice_number, presence: true
+  validates :invoice_number, uniqueness: { scope: %i[user_id invoice_type],
+                                           message: "ya existe una factura %{value} de este tipo" }
 
   def totals
     InvoiceTotals.new(invoice_lines)
