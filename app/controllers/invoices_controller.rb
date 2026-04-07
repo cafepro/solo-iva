@@ -1,9 +1,15 @@
 class InvoicesController < ApplicationController
   before_action :set_invoice, only: %i[show edit update destroy]
 
+  SORTABLE_COLUMNS = %w[invoice_number invoice_date invoice_type].freeze
+
   def index
-    @invoices = current_user.invoices.includes(:invoice_lines).order(invoice_date: :desc)
+    @invoices = current_user.invoices.includes(:invoice_lines)
     @invoices = @invoices.where(invoice_type: params[:invoice_type]) if params[:invoice_type].present?
+
+    @sort    = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "invoice_number"
+    @dir     = params[:dir] == "desc" ? "desc" : "asc"
+    @invoices = @invoices.order(@sort => @dir)
   end
 
   def show

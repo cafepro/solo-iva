@@ -15,9 +15,9 @@
     <table class="w-full text-sm">
       <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
         <tr>
-          <th class="px-4 py-3 text-left">Número</th>
-          <th class="px-4 py-3 text-left">Fecha</th>
-          <th class="px-4 py-3 text-left">Tipo</th>
+          <%= sort_header("invoice_number", "Número", @sort, @dir) %>
+          <%= sort_header("invoice_date", "Fecha", @sort, @dir) %>
+          <%= sort_header("invoice_type", "Tipo", @sort, @dir) %>
           <th class="px-4 py-3 text-left">Nombre</th>
           <th class="px-4 py-3 text-right">Base imponible</th>
           <th class="px-4 py-3 text-right">IVA</th>
