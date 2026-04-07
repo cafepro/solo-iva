@@ -9,25 +9,49 @@ RSpec.describe ParsePdfInvoice do
 
   describe "#call" do
     context "when Gemini returns a valid result" do
-      let(:gemini_result) do
-        PdfExtractionResult.new(
+      let(:gemini_results) do
+        [PdfExtractionResult.new(
           invoice_number: "F-001",
           invoice_date:   Date.new(2024, 1, 1),
           issuer_name:    "Acme SL",
           issuer_nif:     "B12345678",
           lines:          [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]
-        )
+        )]
       end
 
       before do
         allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
-        allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_result)
+        allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_results)
       end
 
-      it "returns the Gemini result" do
-        result = described_class.new(source).call
-        expect(result.invoice_number).to eq("F-001")
-        expect(result.lines.length).to eq(1)
+      it "returns an array of results" do
+        results = described_class.new(source).call
+        expect(results).to be_an(Array)
+        expect(results.first.invoice_number).to eq("F-001")
+      end
+    end
+
+    context "when the PDF contains multiple invoices" do
+      let(:gemini_results) do
+        [
+          PdfExtractionResult.new(invoice_number: "F-001", invoice_date: Date.new(2024, 1, 1),
+                                  issuer_name: "Acme SL", issuer_nif: "B12345678",
+                                  lines: [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]),
+          PdfExtractionResult.new(invoice_number: "F-002", invoice_date: Date.new(2024, 1, 1),
+                                  issuer_name: "Beta SL", issuer_nif: "A87654321",
+                                  lines: [{ iva_rate: 10, base_imponible: 50.0, iva_amount: 5.0 }])
+        ]
+      end
+
+      before do
+        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
+        allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_results)
+      end
+
+      it "returns all invoices found" do
+        results = described_class.new(source).call
+        expect(results.length).to eq(2)
+        expect(results.map(&:invoice_number)).to eq(["F-001", "F-002"])
       end
     end
 

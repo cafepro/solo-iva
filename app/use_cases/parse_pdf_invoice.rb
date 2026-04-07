@@ -5,6 +5,7 @@ class ParsePdfInvoice
     @source = source
   end
 
+  # Returns an array of PdfExtractionResult (one per invoice found in the PDF).
   def call
     api_key = Rails.application.credentials.gemini_api_key
     raise ParseError, "Gemini API key not configured" unless api_key.present?

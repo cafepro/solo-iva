@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // Manages the invoice form: PDF drag-and-drop upload, IVA line management.
 export default class extends Controller {
-  static targets = ["dropzone", "fileInput", "status", "linesContainer", "lineTemplate"]
+  static targets = ["dropzone", "fileInput", "status", "linesContainer", "lineTemplate", "picker"]
   static values  = { uploadUrl: String, lineIndex: Number }
 
   connect() {
@@ -40,6 +40,7 @@ export default class extends Controller {
 
   async uploadPdf(file) {
     this.setStatus("Procesando PDF...")
+    this.removePicker()
 
     const formData = new FormData()
     formData.append("pdf", file)
@@ -49,20 +50,62 @@ export default class extends Controller {
       const resp = await fetch(this.uploadUrlValue, { method: "POST", body: formData })
       const data = await resp.json()
 
-      if (data.error) {
-        this.setStatus("Error: " + data.error)
-        return
-      }
+      if (data.error) { this.setStatus("Error: " + data.error); return }
 
-      this.fillForm(data)
+      const invoices = data.invoices || []
+      if (invoices.length === 0) { this.setStatus("No se encontraron facturas en el PDF."); return }
 
-      if (data.duplicate) {
-        this.setStatus("⚠️ Ya existe una factura con el número " + data.invoice_number + ". Revisa que no sea un duplicado.", "warning")
+      if (invoices.length === 1) {
+        this.loadInvoice(invoices[0])
       } else {
-        this.setStatus("PDF cargado correctamente. Revisa los datos antes de guardar.", "ok")
+        this.setStatus(`Se encontraron ${invoices.length} facturas en el PDF. Selecciona cuál importar:`)
+        this.showPicker(invoices)
       }
     } catch {
       this.setStatus("Error al procesar el PDF.")
+    }
+  }
+
+  // --- Multi-invoice picker ---
+
+  showPicker(invoices) {
+    this.removePicker()
+
+    const container = document.createElement("div")
+    container.setAttribute("data-invoice-form-target", "picker")
+    container.className = "mt-3 flex flex-col gap-2"
+
+    invoices.forEach((inv, i) => {
+      const label = [inv.issuer_name, inv.invoice_number, inv.invoice_date].filter(Boolean).join(" · ")
+      const badge = inv.duplicate
+        ? `<span class="ml-2 text-xs text-amber-600 font-medium">⚠️ posible duplicado</span>`
+        : ""
+
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.className = "text-left px-3 py-2 rounded border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-sm transition-colors"
+      btn.innerHTML = `<span class="font-medium">${label}</span>${badge}`
+      btn.addEventListener("click", () => { this.loadInvoice(invoices[i]); this.removePicker() })
+
+      container.appendChild(btn)
+    })
+
+    this.dropzoneTarget.after(container)
+  }
+
+  removePicker() {
+    if (this.hasPickerTarget) this.pickerTarget.remove()
+  }
+
+  // --- Form fill ---
+
+  loadInvoice(inv) {
+    this.fillForm(inv)
+
+    if (inv.duplicate) {
+      this.setStatus("⚠️ Ya existe una factura con el número " + inv.invoice_number + ". Revisa que no sea un duplicado.", "warning")
+    } else {
+      this.setStatus("PDF cargado correctamente. Revisa los datos antes de guardar.", "ok")
     }
   }
 
