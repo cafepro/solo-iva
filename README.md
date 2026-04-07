@@ -1,24 +1,25 @@
-# README
+# SoloIVA
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A simple invoice management app for Spanish freelancers (*autónomos*). Track issued and received invoices, calculate VAT (IVA), and generate quarterly tax reports (Modelo 303).
 
-Things you may want to cover:
+## Features
 
-* Ruby version
+- **Invoice management** — create, edit, and delete issued and received invoices with multiple VAT lines
+- **PDF import** — drag and drop a PDF invoice to auto-fill fields via AI parsing
+- **Modelo 303** — automatic quarterly VAT report based on your invoices
+- **Authentication** — secure per-user data via Devise
 
-* System dependencies
+## Tech stack
 
-* Configuration
+- Ruby on Rails 8
+- SQLite
+- Tailwind CSS (via CDN)
+- Devise for authentication
 
-* Database creation
+## Getting started
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+```bash
+bundle install
+rails db:setup
+rails server
+```
