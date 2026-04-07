@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     resources :invoices do
       collection do
         post :upload_pdf
+        post :bulk_create
       end
     end
 

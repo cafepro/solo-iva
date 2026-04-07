@@ -51,6 +51,23 @@ class InvoicesController < ApplicationController
     redirect_to invoices_path, notice: "Factura eliminada."
   end
 
+  def bulk_create
+    invoices_params = params.require(:invoices).map do |inv|
+      inv.permit(
+        :invoice_type, :invoice_number, :invoice_date,
+        :issuer_name, :issuer_nif, :recipient_name, :recipient_nif, :notes,
+        invoice_lines_attributes: %i[iva_rate base_imponible]
+      )
+    end
+
+    result = BulkCreateInvoices.new(user: current_user, invoices_params: invoices_params).call
+
+    render json: {
+      saved:   result.saved.map { |i| { id: i.id, invoice_number: i.invoice_number } },
+      skipped: result.skipped.map { |i| { invoice_number: i.invoice_number, errors: i.errors.full_messages } }
+    }
+  end
+
   def upload_pdf
     unless params[:pdf].present?
       return render json: { error: "No se ha subido ningún PDF" }, status: :bad_request

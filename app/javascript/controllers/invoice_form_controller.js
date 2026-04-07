@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Manages the invoice form: PDF drag-and-drop upload, IVA line management.
 export default class extends Controller {
   static targets = ["dropzone", "fileInput", "status", "linesContainer", "lineTemplate", "picker"]
-  static values  = { uploadUrl: String, lineIndex: Number }
+  static values  = { uploadUrl: String, bulkCreateUrl: String, lineIndex: Number }
 
   connect() {
     this.element.querySelectorAll(".line-row").forEach(row => this.attachLineEvents(row))
@@ -86,11 +86,62 @@ export default class extends Controller {
       btn.className = "text-left px-3 py-2 rounded border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-sm transition-colors"
       btn.innerHTML = `<span class="font-medium">${label}</span>${badge}`
       btn.addEventListener("click", () => { this.loadInvoice(invoices[i]); this.removePicker() })
-
       container.appendChild(btn)
     })
 
+    // "Save all" button — only shown when none are duplicates
+    const nonDuplicates = invoices.filter(inv => !inv.duplicate)
+    if (nonDuplicates.length > 1) {
+      const saveAll = document.createElement("button")
+      saveAll.type = "button"
+      saveAll.className = "mt-1 px-3 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+      saveAll.textContent = `Guardar las ${nonDuplicates.length} facturas`
+      saveAll.addEventListener("click", () => this.saveAll(nonDuplicates))
+      container.appendChild(saveAll)
+    }
+
     this.dropzoneTarget.after(container)
+  }
+
+  async saveAll(invoices) {
+    this.setStatus("Guardando facturas...")
+
+    const invoicesData = invoices.map(inv => ({
+      invoice_type:   inv.invoice_type || "recibida",
+      invoice_number: inv.invoice_number,
+      invoice_date:   inv.invoice_date,
+      issuer_name:    inv.issuer_name,
+      issuer_nif:     inv.issuer_nif,
+      invoice_lines_attributes: (inv.lines || []).map(l => ({
+        iva_rate:       l.iva_rate,
+        base_imponible: l.base_imponible
+      }))
+    }))
+
+    try {
+      const resp = await fetch(this.bulkCreateUrlValue, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ invoices: invoicesData })
+      })
+      const data = await resp.json()
+
+      const savedCount   = data.saved?.length   || 0
+      const skippedCount = data.skipped?.length || 0
+
+      if (skippedCount > 0) {
+        this.setStatus(`${savedCount} factura(s) guardadas. ${skippedCount} no pudieron guardarse (revisa duplicados).`, "warning")
+      } else {
+        this.setStatus(`${savedCount} factura(s) guardadas correctamente.`, "ok")
+      }
+
+      this.removePicker()
+    } catch {
+      this.setStatus("Error al guardar las facturas.", "warning")
+    }
   }
 
   removePicker() {
