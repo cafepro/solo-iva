@@ -6,7 +6,7 @@
     <%= link_to "Todas", invoices_path, class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type].blank? ? 'bg-gray-800 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
     <%= link_to "Emitidas", invoices_path(invoice_type: "emitida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'emitida' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
     <%= link_to "Recibidas", invoices_path(invoice_type: "recibida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'recibida' ? 'bg-orange-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
-    <%= link_to "+ Nueva factura", new_invoice_path, class: "text-xs px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 ml-2" %>
+    <%= link_to "+ Nueva factura", new_invoice_path(invoice_type: params[:invoice_type]), class: "text-xs px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 ml-2" %>
   </div>
 </div>
 

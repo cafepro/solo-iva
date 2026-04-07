@@ -16,7 +16,7 @@ class InvoicesController < ApplicationController
   end
 
   def new
-    @invoice = current_user.invoices.build
+    @invoice = current_user.invoices.build(invoice_type: params[:invoice_type].presence)
     @invoice.invoice_lines.build
   end
 
