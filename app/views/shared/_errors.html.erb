@@ -1,0 +1,10 @@
+<% if object.errors.any? %>
+  <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+    <p class="font-semibold mb-1">Por favor corrige los siguientes errores:</p>
+    <ul class="list-disc list-inside space-y-0.5">
+      <% object.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

@@ -1,0 +1,218 @@
+<div class="bg-white rounded-lg border p-6">
+
+  <%# PDF UPLOAD %>
+  <div class="mb-6">
+    <div id="pdf_dropzone"
+         class="relative flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 cursor-pointer transition-colors hover:bg-blue-100 hover:border-blue-400"
+         onclick="document.getElementById('pdf_upload').click()">
+      <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p class="text-sm font-medium text-blue-700">Arrastra el PDF aquí o <span class="underline">selecciona un archivo</span></p>
+      <p class="text-xs text-blue-500">Rellenaremos los campos automáticamente. Podrás revisar antes de guardar.</p>
+      <span id="pdf_status" class="text-xs font-medium text-blue-700 hidden"></span>
+      <input type="file" id="pdf_upload" accept=".pdf" class="sr-only">
+    </div>
+  </div>
+
+  <%= form_with model: invoice, class: "space-y-5" do |f| %>
+    <%= render "shared/errors", object: invoice %>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :invoice_type, "Tipo de factura", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :invoice_type,
+            [["Emitida (venta)", "emitida"], ["Recibida (gasto)", "recibida"]],
+            {},
+            class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            id: "invoice_invoice_type" %>
+      </div>
+      <div>
+        <%= f.label :invoice_number, "Número de factura", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :invoice_number, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_invoice_number" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :invoice_date, "Fecha", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.date_field :invoice_date, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_invoice_date" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :issuer_name, "Emisor (nombre / empresa)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :issuer_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_issuer_name" %>
+      </div>
+      <div>
+        <%= f.label :issuer_nif, "NIF / CIF del emisor", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :issuer_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_issuer_nif" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :recipient_name, "Receptor (nombre / empresa)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :recipient_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+      <div>
+        <%= f.label :recipient_nif, "NIF / CIF del receptor", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :recipient_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+    </div>
+
+    <%# LÍNEAS DE IVA %>
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-medium text-gray-700">Líneas de IVA</label>
+        <button type="button" id="add_line" class="text-xs text-blue-600 hover:underline">+ Añadir línea</button>
+      </div>
+      <div id="invoice_lines" class="space-y-2">
+        <%= f.fields_for :invoice_lines do |lf| %>
+          <%= render "invoice_line_fields", f: lf %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= f.label :notes, "Notas (opcional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+
+    <div class="flex gap-3 pt-2">
+      <%= f.submit "Guardar factura", class: "bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 text-sm font-medium cursor-pointer" %>
+      <%= link_to "Cancelar", invoices_path, class: "text-sm text-gray-500 hover:underline self-center" %>
+    </div>
+  <% end %>
+</div>
+
+<%# TEMPLATE para nueva línea (usado por JS) %>
+<template id="line_template">
+  <div class="line-row flex gap-3 items-center p-3 bg-gray-50 rounded border">
+    <div class="flex-1">
+      <label class="text-xs text-gray-500">Tipo IVA</label>
+      <select name="invoice[invoice_lines_attributes][NEW_RECORD][iva_rate]" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+        <option value="21">21%</option>
+        <option value="10">10%</option>
+        <option value="4">4%</option>
+        <option value="0">0%</option>
+      </select>
+    </div>
+    <div class="flex-1">
+      <label class="text-xs text-gray-500">Base imponible (€)</label>
+      <input type="number" step="0.01" name="invoice[invoice_lines_attributes][NEW_RECORD][base_imponible]"
+             class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+    </div>
+    <div class="flex-1">
+      <label class="text-xs text-gray-500">Cuota IVA (€) — calculada</label>
+      <input type="number" step="0.01" class="w-full border border-gray-200 bg-gray-100 rounded px-2 py-1.5 text-sm" readonly placeholder="auto">
+    </div>
+    <button type="button" class="remove-line text-red-400 hover:text-red-600 text-lg mt-4">&times;</button>
+  </div>
+</template>
+
+<%= javascript_tag do %>
+  let lineIndex = <%= invoice.invoice_lines.size %>;
+
+  document.getElementById('add_line').addEventListener('click', function() {
+    const template = document.getElementById('line_template').innerHTML;
+    const html = template.replace(/NEW_RECORD/g, lineIndex++);
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    document.getElementById('invoice_lines').appendChild(div.firstElementChild);
+    attachLineEvents(div.firstElementChild);
+  });
+
+  document.querySelectorAll('.line-row').forEach(attachLineEvents);
+
+  function attachLineEvents(row) {
+    row.querySelector('.remove-line')?.addEventListener('click', function() {
+      const destroyInput = row.querySelector('input[name*="_destroy"]');
+      if (destroyInput) { destroyInput.value = '1'; row.style.display = 'none'; }
+      else row.remove();
+    });
+
+    const rateSelect = row.querySelector('select[name*="iva_rate"]');
+    const baseInput  = row.querySelector('input[name*="base_imponible"]');
+    const quotaInput = row.querySelectorAll('input[type="number"]')[1];
+
+    function updateQuota() {
+      const base = parseFloat(baseInput?.value) || 0;
+      const rate = parseFloat(rateSelect?.value) || 0;
+      if (quotaInput) quotaInput.value = (base * rate / 100).toFixed(2);
+    }
+
+    rateSelect?.addEventListener('change', updateQuota);
+    baseInput?.addEventListener('input', updateQuota);
+  }
+
+  // Drag & drop
+  const dropzone = document.getElementById('pdf_dropzone');
+  dropzone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropzone.classList.add('bg-blue-100', 'border-blue-500');
+  });
+  dropzone.addEventListener('dragleave', function(e) {
+    if (!dropzone.contains(e.relatedTarget)) {
+      dropzone.classList.remove('bg-blue-100', 'border-blue-500');
+    }
+  });
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropzone.classList.remove('bg-blue-100', 'border-blue-500');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadPdf(file);
+  });
+
+  // PDF upload
+  document.getElementById('pdf_upload').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    uploadPdf(file);
+  });
+
+  async function uploadPdf(file) {
+    const status = document.getElementById('pdf_status');
+    status.textContent = 'Procesando PDF...';
+    status.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+    formData.append('authenticity_token', document.querySelector('meta[name="csrf-token"]').content);
+
+    try {
+      const resp = await fetch('<%= upload_pdf_invoices_path %>', { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      if (data.error) { status.textContent = 'Error: ' + data.error; return; }
+
+      if (data.invoice_number) document.getElementById('invoice_invoice_number').value = data.invoice_number;
+      if (data.invoice_date)   document.getElementById('invoice_invoice_date').value   = data.invoice_date;
+      if (data.issuer_name)    document.getElementById('invoice_issuer_name').value    = data.issuer_name;
+      if (data.issuer_nif)     document.getElementById('invoice_issuer_nif').value     = data.issuer_nif;
+
+      if (data.lines && data.lines.length > 0) {
+        document.getElementById('invoice_lines').innerHTML = '';
+        data.lines.forEach(line => {
+          const template = document.getElementById('line_template').innerHTML;
+          const html = template.replace(/NEW_RECORD/g, lineIndex++);
+          const div = document.createElement('div');
+          div.innerHTML = html;
+          const row = div.firstElementChild;
+          const rateSelect = row.querySelector('select');
+          const baseInput  = row.querySelectorAll('input[type="number"]')[0];
+          const quotaInput = row.querySelectorAll('input[type="number"]')[1];
+          if (rateSelect) rateSelect.value = line.iva_rate;
+          if (baseInput)  baseInput.value  = line.base_imponible;
+          if (quotaInput) quotaInput.value = line.iva_amount;
+          document.getElementById('invoice_lines').appendChild(row);
+          attachLineEvents(row);
+        });
+      }
+
+      status.textContent = 'PDF cargado correctamente. Revisa los datos antes de guardar.';
+    } catch(err) {
+      status.textContent = 'Error al procesar el PDF.';
+    }
+  }
+<% end %>

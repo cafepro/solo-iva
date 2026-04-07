@@ -1,0 +1,19 @@
+<div class="line-row flex gap-3 items-center p-3 bg-gray-50 rounded border">
+  <%= f.hidden_field :_destroy, class: "destroy-flag" %>
+  <div class="flex-1">
+    <label class="text-xs text-gray-500">Tipo IVA</label>
+    <%= f.select :iva_rate,
+        [[" 21%", 21], ["10%", 10], [" 4%", 4], [" 0%", 0]],
+        {},
+        class: "w-full border border-gray-300 rounded px-2 py-1.5 text-sm" %>
+  </div>
+  <div class="flex-1">
+    <label class="text-xs text-gray-500">Base imponible (€)</label>
+    <%= f.number_field :base_imponible, step: "0.01", class: "w-full border border-gray-300 rounded px-2 py-1.5 text-sm" %>
+  </div>
+  <div class="flex-1">
+    <label class="text-xs text-gray-500">Cuota IVA (€) — calculada</label>
+    <input type="number" step="0.01" value="<%= f.object.iva_amount %>" class="w-full border border-gray-200 bg-gray-100 rounded px-2 py-1.5 text-sm" readonly>
+  </div>
+  <button type="button" class="remove-line text-red-400 hover:text-red-600 text-lg mt-4">&times;</button>
+</div>

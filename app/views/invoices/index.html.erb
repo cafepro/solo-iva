@@ -1,0 +1,56 @@
+<% content_for :title, "Facturas — SoloIVA" %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Facturas</h1>
+  <div class="flex gap-2">
+    <%= link_to "Todas", invoices_path, class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type].blank? ? 'bg-gray-800 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+    <%= link_to "Emitidas", invoices_path(invoice_type: "emitida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'emitida' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+    <%= link_to "Recibidas", invoices_path(invoice_type: "recibida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'recibida' ? 'bg-orange-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+    <%= link_to "+ Nueva factura", new_invoice_path, class: "text-xs px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 ml-2" %>
+  </div>
+</div>
+
+<% if @invoices.any? %>
+  <div class="bg-white rounded-lg border overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-3 text-left">Número</th>
+          <th class="px-4 py-3 text-left">Fecha</th>
+          <th class="px-4 py-3 text-left">Tipo</th>
+          <th class="px-4 py-3 text-left">Nombre</th>
+          <th class="px-4 py-3 text-right">Base imponible</th>
+          <th class="px-4 py-3 text-right">IVA</th>
+          <th class="px-4 py-3 text-right">Total</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @invoices.each do |inv| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium"><%= inv.invoice_number %></td>
+            <td class="px-4 py-3 text-gray-500"><%= inv.invoice_date&.strftime("%d/%m/%Y") %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs <%= inv.emitida? ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700' %>">
+                <%= inv.emitida? ? "Emitida" : "Recibida" %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600"><%= inv.emitida? ? inv.recipient_name : inv.issuer_name %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_base, unit: "€", separator: ",", delimiter: ".") %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_iva, unit: "€", separator: ",", delimiter: ".") %></td>
+            <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(inv.total, unit: "€", separator: ",", delimiter: ".") %></td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "Editar", edit_invoice_path(inv), class: "text-blue-600 hover:underline text-xs mr-2" %>
+              <%= button_to "Borrar", invoice_path(inv), method: :delete, data: { turbo_confirm: "¿Seguro que quieres borrar esta factura?" }, class: "text-red-500 hover:underline text-xs bg-transparent border-0 p-0 cursor-pointer" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center py-16 text-gray-400">
+    <p class="text-lg mb-2">No hay facturas todavía</p>
+    <%= link_to "+ Añadir primera factura", new_invoice_path, class: "text-blue-600 hover:underline text-sm" %>
+  </div>
+<% end %>

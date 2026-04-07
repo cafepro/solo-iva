@@ -1,0 +1,148 @@
+<% content_for :title, "Dashboard — SoloIVA" %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+  <div class="flex gap-2 flex-wrap">
+    <% [Date.today.year, Date.today.year - 1].each do |y| %>
+      <% [1, 2, 3, 4].each do |q| %>
+        <%= link_to "#{y} T#{q}", dashboard_path(year: y, quarter: q),
+            class: "text-xs px-2 py-1 rounded #{@year == y && @quarter == q ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-100'}" %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-lg border p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Devengado</p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_46], unit: "€", separator: ",", delimiter: ".") %></p>
+  </div>
+  <div class="bg-white rounded-lg border p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Deducible</p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_47], unit: "€", separator: ",", delimiter: ".") %></p>
+  </div>
+  <div class="bg-white rounded-lg border p-5 <%= @report[:casilla_64] >= 0 ? 'border-red-200' : 'border-green-200' %>">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Resultado (casilla 64)</p>
+    <p class="text-2xl font-bold <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
+      <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
+      <span class="text-sm font-normal"><%= @report[:casilla_64] >= 0 ? "a ingresar" : "a devolver" %></span>
+    </p>
+  </div>
+</div>
+
+<div class="mb-8">
+  <%= link_to modelo303_reports_path(year: @year, quarter: @quarter),
+      class: "inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium" do %>
+    Ver Modelo 303 completo &rarr;
+  <% end %>
+  <%= link_to new_invoice_path, class: "inline-block ml-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 text-sm font-medium" do %>
+    + Nueva factura
+  <% end %>
+</div>
+
+<% if @recent_invoices.any? %>
+  <h2 class="text-lg font-semibold text-gray-700 mb-3">Últimas facturas</h2>
+  <div class="bg-white rounded-lg border overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-3 text-left">Número</th>
+          <th class="px-4 py-3 text-left">Fecha</th>
+          <th class="px-4 py-3 text-left">Tipo</th>
+          <th class="px-4 py-3 text-left">Emisor/Proveedor</th>
+          <th class="px-4 py-3 text-right">Base</th>
+          <th class="px-4 py-3 text-right">IVA</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @recent_invoices.each do |inv| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3"><%= link_to inv.invoice_number, edit_invoice_path(inv), class: "text-blue-600 hover:underline" %></td>
+            <td class="px-4 py-3 text-gray-500"><%= inv.invoice_date&.strftime("%d/%m/%Y") %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs <%= inv.emitida? ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700' %>">
+                <%= inv.emitida? ? "Emitida" : "Recibida" %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600"><%= inv.emitida? ? inv.recipient_name : inv.issuer_name %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_base, unit: "€", separator: ",", delimiter: ".") %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_iva, unit: "€", separator: ",", delimiter: ".") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+  <div class="flex gap-2">
+    <% [Date.today.year, Date.today.year - 1].each do |y| %>
+      <% [1, 2, 3, 4].each do |q| %>
+        <%= link_to "#{y} T#{q}", dashboard_path(year: y, quarter: q),
+            class: "text-xs px-2 py-1 rounded #{@year == y && @quarter == q ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-100'}" %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-lg border p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Devengado</p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_46], unit: "€", separator: ",", delimiter: ".") %></p>
+  </div>
+  <div class="bg-white rounded-lg border p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Deducible</p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_47], unit: "€", separator: ",", delimiter: ".") %></p>
+  </div>
+  <div class="bg-white rounded-lg border p-5 <%= @report[:casilla_64] >= 0 ? 'border-red-200' : 'border-green-200' %>">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Resultado (casilla 64)</p>
+    <p class="text-2xl font-bold <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
+      <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
+      <span class="text-sm font-normal"><%= @report[:casilla_64] >= 0 ? "a ingresar" : "a devolver" %></span>
+    </p>
+  </div>
+</div>
+
+<div class="mb-8">
+  <%= link_to modelo303_reports_path(year: @year, quarter: @quarter),
+      class: "inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium" do %>
+    Ver Modelo 303 completo &rarr;
+  <% end %>
+  <%= link_to new_invoice_path, class: "inline-block ml-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 text-sm font-medium" do %>
+    + Nueva factura
+  <% end %>
+</div>
+
+<% if @recent_invoices.any? %>
+  <h2 class="text-lg font-semibold text-gray-700 mb-3">Últimas facturas</h2>
+  <div class="bg-white rounded-lg border overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-3 text-left">Número</th>
+          <th class="px-4 py-3 text-left">Fecha</th>
+          <th class="px-4 py-3 text-left">Tipo</th>
+          <th class="px-4 py-3 text-left">Emisor/Proveedor</th>
+          <th class="px-4 py-3 text-right">Base</th>
+          <th class="px-4 py-3 text-right">IVA</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @recent_invoices.each do |inv| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3"><%= link_to inv.invoice_number, edit_invoice_path(inv), class: "text-blue-600 hover:underline" %></td>
+            <td class="px-4 py-3 text-gray-500"><%= inv.invoice_date&.strftime("%d/%m/%Y") %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs <%= inv.emitida? ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700' %>">
+                <%= inv.emitida? ? "Emitida" : "Recibida" %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600"><%= inv.emitida? ? inv.recipient_name : inv.issuer_name %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_base, unit: "€", separator: ",", delimiter: ".") %></td>
+            <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_iva, unit: "€", separator: ",", delimiter: ".") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
