@@ -19,8 +19,10 @@ class InvoicesController < ApplicationController
   end
 
   def create
-    @invoice = current_user.invoices.build(invoice_params)
-    if @invoice.save
+    result = CreateInvoice.new(user: current_user, params: invoice_params).call
+    @invoice = result[:invoice]
+
+    if result[:ok]
       redirect_to invoices_path, notice: "Factura guardada correctamente."
     else
       render :new, status: :unprocessable_entity
@@ -28,7 +30,10 @@ class InvoicesController < ApplicationController
   end
 
   def update
-    if @invoice.update(invoice_params)
+    result = UpdateInvoice.new(invoice: @invoice, params: invoice_params).call
+    @invoice = result[:invoice]
+
+    if result[:ok]
       redirect_to invoices_path, notice: "Factura actualizada correctamente."
     else
       render :edit, status: :unprocessable_entity
@@ -36,7 +41,7 @@ class InvoicesController < ApplicationController
   end
 
   def destroy
-    @invoice.destroy
+    DestroyInvoice.new(invoice: @invoice).call
     redirect_to invoices_path, notice: "Factura eliminada."
   end
 
@@ -45,9 +50,9 @@ class InvoicesController < ApplicationController
       return render json: { error: "No se ha subido ningún PDF" }, status: :bad_request
     end
 
-    parsed = PdfInvoiceParser.new(params[:pdf].tempfile).parse
-    render json: parsed
-  rescue PdfInvoiceParser::ParseError => e
+    result = ParsePdfInvoice.new(params[:pdf].tempfile).call
+    render json: result.to_h
+  rescue ParsePdfInvoice::ParseError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 

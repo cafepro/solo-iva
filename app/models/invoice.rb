@@ -5,26 +5,21 @@ class Invoice < ApplicationRecord
 
   enum :invoice_type, { emitida: 0, recibida: 1 }
 
-  validates :invoice_type, :invoice_date, presence: true
-  validates :invoice_number, presence: true
+  validates :invoice_type, :invoice_date, :invoice_number, presence: true
+
+  def totals
+    InvoiceTotals.new(invoice_lines)
+  end
+
+  def total_base = totals.base
+  def total_iva  = totals.iva
+  def total      = totals.total
 
   def quarter
-    ((invoice_date.month - 1) / 3) + 1
+    QuarterCalculator.quarter_for(invoice_date)
   end
 
   def year
-    invoice_date.year
-  end
-
-  def total_base
-    invoice_lines.sum(&:base_imponible)
-  end
-
-  def total_iva
-    invoice_lines.sum(&:iva_amount)
-  end
-
-  def total
-    total_base + total_iva
+    QuarterCalculator.year_for(invoice_date)
   end
 end
