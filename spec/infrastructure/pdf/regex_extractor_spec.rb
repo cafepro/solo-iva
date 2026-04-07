@@ -11,7 +11,7 @@ RSpec.describe Pdf::RegexExtractor do
     context "when the PDF contains parseable data" do
       let(:invoice_text) do
         <<~TEXT
-          Factura: F-2024-001
+          Factura nº: F-2024-001
           Fecha: 15/03/2024
           NIF: B12345678
           Acme SL
@@ -26,7 +26,7 @@ RSpec.describe Pdf::RegexExtractor do
         expect(result).to be_a(PdfExtractionResult)
       end
 
-      it "extracts the invoice number" do
+      it "extracts the invoice number via labeled pattern" do
         expect(result.invoice_number).to eq("F-2024-001")
       end
 
@@ -41,6 +41,14 @@ RSpec.describe Pdf::RegexExtractor do
       it "extracts IVA lines" do
         expect(result.lines).not_to be_empty
         expect(result.lines.first[:iva_rate]).to eq(21)
+      end
+    end
+
+    context "when the invoice number has no label but a letter-prefixed format" do
+      subject(:result) { extractor_with_text("S265022\nFecha: 01/01/2026\n21% 100,00").extract }
+
+      it "extracts it via the alpha-numeric pattern" do
+        expect(result.invoice_number).to eq("S265022")
       end
     end
 

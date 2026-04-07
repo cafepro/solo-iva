@@ -40,8 +40,14 @@
             <td class="px-4 py-3 text-right"><%= number_to_currency(inv.total_iva, unit: "€", separator: ",", delimiter: ".") %></td>
             <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(inv.total, unit: "€", separator: ",", delimiter: ".") %></td>
             <td class="px-4 py-3 text-right">
-              <%= link_to "Editar", edit_invoice_path(inv), class: "text-blue-600 hover:underline text-xs mr-2" %>
-              <%= button_to "Borrar", invoice_path(inv), method: :delete, data: { turbo_confirm: "¿Seguro que quieres borrar esta factura?" }, class: "text-red-500 hover:underline text-xs bg-transparent border-0 p-0 cursor-pointer" %>
+              <div class="flex items-center justify-end gap-1">
+                <%= link_to edit_invoice_path(inv), title: "Editar", class: "p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" do %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
+                <% end %>
+                <%= button_to invoice_path(inv), method: :delete, title: "Borrar", data: { turbo_confirm: "¿Seguro que quieres borrar esta factura?" }, class: "p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-0" do %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>
+                <% end %>
+              </div>
             </td>
           </tr>
         <% end %>

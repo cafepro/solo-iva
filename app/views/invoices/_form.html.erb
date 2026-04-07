@@ -92,10 +92,9 @@
       <%= link_to "Cancelar", invoices_path, class: "text-sm text-gray-500 hover:underline self-center" %>
     </div>
   <% end %>
-</div>
 
-<%# Template for new IVA line rows, used by the Stimulus controller %>
-<template data-invoice-form-target="lineTemplate">
+  <%# Template for new IVA line rows, used by the Stimulus controller %>
+  <template data-invoice-form-target="lineTemplate">
   <div class="line-row flex gap-3 items-center p-3 bg-gray-50 rounded border">
     <div class="flex-1">
       <label class="text-xs text-gray-500">Tipo IVA</label>
@@ -117,4 +116,5 @@
     </div>
     <button type="button" class="remove-line text-red-400 hover:text-red-600 text-lg mt-4">&times;</button>
   </div>
-</template>
+  </template>
+</div>

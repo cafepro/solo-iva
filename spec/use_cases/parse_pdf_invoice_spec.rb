@@ -3,8 +3,13 @@ require "rails_helper"
 RSpec.describe ParsePdfInvoice do
   let(:source) { StringIO.new("fake pdf content") }
 
+  before do
+    # extract_text always runs first; stub it so PDF::Reader is never called
+    allow_any_instance_of(ParsePdfInvoice).to receive(:extract_text).and_return("invoice text")
+  end
+
   describe "#call" do
-    context "when regex extraction succeeds" do
+    context "when regex extraction returns all critical fields" do
       let(:regex_result) do
         PdfExtractionResult.new(
           invoice_number: "F-001",
@@ -15,9 +20,7 @@ RSpec.describe ParsePdfInvoice do
         )
       end
 
-      before do
-        allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_return(regex_result)
-      end
+      before { allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_return(regex_result) }
 
       it "returns the regex result without calling Gemini" do
         expect_any_instance_of(Pdf::GeminiExtractor).not_to receive(:extract)
@@ -26,8 +29,8 @@ RSpec.describe ParsePdfInvoice do
       end
     end
 
-    context "when regex extraction finds no lines" do
-      let(:empty_regex_result) do
+    context "when regex extraction is missing critical fields" do
+      let(:incomplete_result) do
         PdfExtractionResult.new(invoice_number: nil, invoice_date: nil,
                                 issuer_name: nil, issuer_nif: nil, lines: [])
       end
@@ -43,8 +46,7 @@ RSpec.describe ParsePdfInvoice do
       end
 
       before do
-        allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_return(empty_regex_result)
-        allow_any_instance_of(ParsePdfInvoice).to receive(:extract_text).and_return("invoice text")
+        allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_return(incomplete_result)
         allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
         allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_result)
       end
@@ -56,9 +58,7 @@ RSpec.describe ParsePdfInvoice do
     end
 
     context "when an unexpected error occurs" do
-      before do
-        allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_raise(RuntimeError, "boom")
-      end
+      before { allow_any_instance_of(Pdf::RegexExtractor).to receive(:extract).and_raise(RuntimeError, "boom") }
 
       it "raises ParseError" do
         expect { described_class.new(source).call }.to raise_error(ParsePdfInvoice::ParseError)

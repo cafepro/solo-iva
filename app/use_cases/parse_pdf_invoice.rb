@@ -1,4 +1,5 @@
-# Orchestrates PDF extraction: tries regex first, falls back to Gemini if no lines found.
+# Orchestrates PDF extraction: tries regex first, falls back to Gemini when
+# critical fields (invoice number, date, or lines) are missing.
 class ParsePdfInvoice
   class ParseError < StandardError; end
 
@@ -7,8 +8,9 @@ class ParsePdfInvoice
   end
 
   def call
+    text   = extract_text
     result = Pdf::RegexExtractor.new(@source).extract
-    result = gemini_fallback if result.lines.empty?
+    result = gemini_fallback(text) if needs_fallback?(result)
     result
   rescue ParseError
     raise
@@ -18,18 +20,23 @@ class ParsePdfInvoice
 
   private
 
-  def gemini_fallback
+  def needs_fallback?(result)
+    result.invoice_number.nil? || result.invoice_date.nil? || result.lines.empty?
+  end
+
+  def gemini_fallback(text)
     api_key = Rails.application.credentials.gemini_api_key
     return empty_result unless api_key.present?
 
-    # Re-read text for Gemini since RegexExtractor already consumed the IO
-    text = extract_text
     Pdf::GeminiExtractor.new(text, api_key: api_key).extract
   end
 
   def extract_text
+    @source.rewind if @source.respond_to?(:rewind)
     reader = PDF::Reader.new(@source)
-    reader.pages.map(&:text).join("\n")
+    text   = reader.pages.map(&:text).join("\n")
+    @source.rewind if @source.respond_to?(:rewind)
+    text
   end
 
   def empty_result
