@@ -10,16 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_215434) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_07_223459) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "invoice_lines", force: :cascade do |t|
-    t.decimal "base_imponible"
+    t.decimal "base_imponible", precision: 10, scale: 2
     t.datetime "created_at", null: false
     t.bigint "invoice_id", null: false
-    t.decimal "iva_amount"
-    t.decimal "iva_rate"
+    t.decimal "iva_amount", precision: 10, scale: 2
+    t.decimal "iva_rate", precision: 5, scale: 2
     t.datetime "updated_at", null: false
     t.index ["invoice_id"], name: "index_invoice_lines_on_invoice_id"
   end

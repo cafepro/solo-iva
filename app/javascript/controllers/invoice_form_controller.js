@@ -55,7 +55,12 @@ export default class extends Controller {
       }
 
       this.fillForm(data)
-      this.setStatus("PDF cargado correctamente. Revisa los datos antes de guardar.")
+
+      if (data.duplicate) {
+        this.setStatus("⚠️ Ya existe una factura con el número " + data.invoice_number + ". Revisa que no sea un duplicado.", "warning")
+      } else {
+        this.setStatus("PDF cargado correctamente. Revisa los datos antes de guardar.", "ok")
+      }
     } catch {
       this.setStatus("Error al procesar el PDF.")
     }
@@ -124,8 +129,10 @@ export default class extends Controller {
 
   // --- Helpers ---
 
-  setStatus(text) {
-    this.statusTarget.textContent = text
-    this.statusTarget.classList.remove("hidden")
+  setStatus(text, type = "ok") {
+    const el = this.statusTarget
+    el.textContent = text
+    el.classList.remove("hidden", "text-blue-700", "text-amber-700")
+    el.classList.add(type === "warning" ? "text-amber-700" : "text-blue-700")
   }
 }

@@ -12,6 +12,6 @@ class InvoiceLine < ApplicationRecord
   private
 
   def calculate_iva_amount
-    self.iva_amount = (base_imponible * iva_rate / 100.0).round(2)
+    self.iva_amount = (base_imponible * iva_rate / 100).round(2)
   end
 end

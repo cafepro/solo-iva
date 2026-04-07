@@ -56,8 +56,14 @@ class InvoicesController < ApplicationController
       return render json: { error: "No se ha subido ningún PDF" }, status: :bad_request
     end
 
-    result = ParsePdfInvoice.new(params[:pdf].tempfile).call
-    render json: result.to_h
+    result   = ParsePdfInvoice.new(params[:pdf].tempfile).call
+    response = result.to_h
+
+    if result.invoice_number.present?
+      response[:duplicate] = current_user.invoices.exists?(invoice_number: result.invoice_number)
+    end
+
+    render json: response
   rescue ParsePdfInvoice::ParseError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
