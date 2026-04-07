@@ -3,7 +3,7 @@ module Pdf
   # Used as a fallback when regex extraction yields no lines.
   class GeminiExtractor
     API_URL  = "https://generativelanguage.googleapis.com"
-    MODEL    = "gemini-1.5-flash"
+    MODEL    = "gemini-2.5-flash"
     MAX_CHARS = 3000
 
     def initialize(text, api_key:)
