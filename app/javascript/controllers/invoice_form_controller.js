@@ -176,8 +176,8 @@ export default class extends Controller {
         const baseInput  = row.querySelectorAll("input[type='number']")[0]
         const quotaInput = row.querySelectorAll("input[type='number']")[1]
         if (rateSelect) rateSelect.value = line.iva_rate
-        if (baseInput)  baseInput.value  = line.base_imponible
-        if (quotaInput) quotaInput.value = line.iva_amount
+        if (baseInput)  baseInput.value  = parseFloat(line.base_imponible).toFixed(2)
+        if (quotaInput) quotaInput.value = parseFloat(line.iva_amount).toFixed(2)
         this.linesContainerTarget.appendChild(row)
         this.attachLineEvents(row)
       })
