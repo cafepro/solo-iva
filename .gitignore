@@ -26,6 +26,9 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Cursor IDE
+.cursor/
+
 # macOS
 .DS_Store
 
