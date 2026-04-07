@@ -4,7 +4,7 @@ module Pdf
   class GeminiExtractor
     API_URL  = "https://generativelanguage.googleapis.com"
     MODEL    = "gemini-2.5-flash"
-    MAX_CHARS = 3000
+    MAX_CHARS = 6000
 
     def initialize(text, api_key:)
       @text    = text
@@ -49,21 +49,34 @@ module Pdf
 
     def prompt
       <<~PROMPT
-        Analiza el siguiente texto de una factura española y extrae los datos en formato JSON.
-        Devuelve SOLO el JSON, sin explicaciones.
+        Extract structured data from the following Spanish invoice text and return it as JSON.
+        Return ONLY the raw JSON object — no explanations, no markdown, no code blocks.
 
-        Formato esperado:
+        Rules:
+        - "invoice_number": the unique invoice identifier (e.g. "OM4VMAJ0160440", "F-2026-001", "S265022").
+          Must contain at least one digit and be longer than 3 characters. Never use a date or generic word.
+        - "invoice_date": invoice issue date in YYYY-MM-DD format, or null.
+        - "issuer_name": legal name of the company or person who issued the invoice (the supplier/vendor),
+          NOT the recipient or customer.
+        - "issuer_nif": Spanish tax ID (NIF/CIF) of the issuer, or null if not present.
+        - "lines": array of VAT lines, each with:
+            - "iva_rate": VAT rate as an integer (0, 4, 10 or 21)
+            - "base_imponible": taxable base amount in euros as a decimal number
+            - "iva_amount": VAT amount in euros as a decimal number
+          Merge lines with the same VAT rate into one. Exclude lines where base_imponible is 0.
+
+        Expected JSON format:
         {
-          "invoice_number": "string o null",
-          "invoice_date": "YYYY-MM-DD o null",
-          "issuer_name": "string o null",
-          "issuer_nif": "string o null",
+          "invoice_number": "string or null",
+          "invoice_date": "YYYY-MM-DD or null",
+          "issuer_name": "string or null",
+          "issuer_nif": "string or null",
           "lines": [
             { "iva_rate": 21, "base_imponible": 100.00, "iva_amount": 21.00 }
           ]
         }
 
-        Texto de la factura:
+        Invoice text:
         #{@text.truncate(MAX_CHARS)}
       PROMPT
     end

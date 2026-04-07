@@ -1,5 +1,7 @@
-# Orchestrates PDF extraction: tries regex first, falls back to Gemini when
-# critical fields (invoice number, date, or lines) are missing.
+# Extracts invoice data from a PDF using Gemini as the primary strategy.
+# The regex extractor is kept as a fast pre-check: if it already finds both
+# the invoice number and IVA lines we skip the API call. Otherwise Gemini
+# handles the full extraction.
 class ParsePdfInvoice
   class ParseError < StandardError; end
 
@@ -10,7 +12,8 @@ class ParsePdfInvoice
   def call
     text   = extract_text
     result = Pdf::RegexExtractor.new(@source).extract
-    result = gemini_fallback(text) if needs_fallback?(result)
+
+    result = gemini_extraction(text) if needs_gemini?(result)
     result
   rescue ParseError
     raise
@@ -20,15 +23,17 @@ class ParsePdfInvoice
 
   private
 
-  def needs_fallback?(result)
-    result.invoice_number.nil? ||
-      result.invoice_date.nil? ||
-      result.lines.empty? ||
-      result.issuer_name.nil? ||
-      result.issuer_nif.nil?
+  def needs_gemini?(result)
+    result.lines.empty? || !plausible_invoice_number?(result.invoice_number)
   end
 
-  def gemini_fallback(text)
+  # A plausible invoice number has at least one digit and is longer than 3 chars.
+  def plausible_invoice_number?(number)
+    return false if number.nil?
+    number.length > 3 && number.match?(/\d/)
+  end
+
+  def gemini_extraction(text)
     api_key = Rails.application.credentials.gemini_api_key
     return empty_result unless api_key.present?
 

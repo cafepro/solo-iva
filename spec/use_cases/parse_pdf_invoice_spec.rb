@@ -9,13 +9,13 @@ RSpec.describe ParsePdfInvoice do
   end
 
   describe "#call" do
-    context "when regex extraction returns all critical fields" do
+    context "when regex extraction returns invoice number and lines" do
       let(:regex_result) do
         PdfExtractionResult.new(
           invoice_number: "F-001",
-          invoice_date:   Date.new(2024, 1, 1),
-          issuer_name:    "Acme SL",
-          issuer_nif:     "B12345678",
+          invoice_date:   nil,
+          issuer_name:    nil,
+          issuer_nif:     nil,
           lines:          [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]
         )
       end
@@ -29,10 +29,10 @@ RSpec.describe ParsePdfInvoice do
       end
     end
 
-    context "when regex extraction is missing critical fields" do
+    context "when regex extraction is missing invoice number or lines" do
       let(:incomplete_result) do
-        PdfExtractionResult.new(invoice_number: nil, invoice_date: nil,
-                                issuer_name: nil, issuer_nif: nil, lines: [])
+        PdfExtractionResult.new(invoice_number: nil, invoice_date: Date.new(2024, 1, 1),
+                                issuer_name: "Acme SL", issuer_nif: "B12345678", lines: [])
       end
 
       let(:gemini_result) do
