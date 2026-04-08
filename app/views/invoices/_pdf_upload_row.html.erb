@@ -1,0 +1,21 @@
+<div id="pdf_upload_<%= upload.id %>" class="flex items-center gap-3 px-4 py-2 text-sm bg-white rounded-lg border">
+  <% if upload.pending? || upload.processing? %>
+    <svg class="w-4 h-4 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+    </svg>
+  <% elsif upload.done? %>
+    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+  <% else %>
+    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  <% end %>
+  <span class="flex-1 text-gray-700 truncate"><%= upload.filename %></span>
+  <span class="text-xs text-gray-400 capitalize"><%= upload.status %></span>
+  <% if upload.failed? && upload.error_message %>
+    <span class="text-xs text-red-500 truncate max-w-xs" title="<%= upload.error_message %>">Error</span>
+  <% end %>
+</div>

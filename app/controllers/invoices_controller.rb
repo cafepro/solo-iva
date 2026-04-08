@@ -1,10 +1,39 @@
 class InvoicesController < ApplicationController
-  before_action :set_invoice, only: %i[show edit update destroy]
+  before_action :set_invoice, only: %i[show edit update destroy confirm]
 
   SORTABLE_COLUMNS = %w[invoice_number invoice_date invoice_type].freeze
 
+  def review
+    @pending = current_user.invoices.pending_review.includes(:invoice_lines).order(:created_at)
+    @uploads = current_user.pdf_uploads.where(status: %w[pending processing]).order(:created_at)
+  end
+
+  def upload_pdfs
+    uploads = Array(params[:pdfs]).map do |file|
+      CreatePdfUpload.new(user: current_user, file: file).call
+    end
+    render json: { uploads: uploads.map { |u| { id: u.id, filename: u.filename, status: u.status } } }
+  rescue => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def confirm
+    ConfirmInvoice.new(invoice: @invoice).call
+    pending_count = current_user.invoices.pending_review.count
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.remove("pending_invoice_#{@invoice.id}"),
+          turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
+        ]
+      end
+      format.html { redirect_to review_invoices_path }
+    end
+  end
+
   def index
-    @invoices = current_user.invoices.includes(:invoice_lines)
+    @invoices = current_user.invoices.for_accounting.includes(:invoice_lines)
     @invoices = @invoices.where(invoice_type: params[:invoice_type]) if params[:invoice_type].present?
 
     @sort    = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "invoice_number"

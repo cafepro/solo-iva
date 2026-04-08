@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_223459) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_070042) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,10 +34,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_223459) do
     t.text "notes"
     t.string "recipient_name"
     t.string "recipient_nif"
+    t.string "status", default: "confirmed", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["status"], name: "index_invoices_on_status"
     t.index ["user_id", "invoice_type", "invoice_number"], name: "index_invoices_on_user_type_number", unique: true
     t.index ["user_id"], name: "index_invoices_on_user_id"
+  end
+
+  create_table "pdf_uploads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.binary "file_data", null: false
+    t.string "filename", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_pdf_uploads_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -54,4 +67,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_223459) do
 
   add_foreign_key "invoice_lines", "invoices"
   add_foreign_key "invoices", "users"
+  add_foreign_key "pdf_uploads", "users"
 end

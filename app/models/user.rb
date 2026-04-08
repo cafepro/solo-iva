@@ -5,4 +5,5 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_many :invoices, dependent: :destroy
+  has_many :pdf_uploads, dependent: :destroy
 end

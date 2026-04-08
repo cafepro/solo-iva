@@ -22,7 +22,8 @@ class CalculateModelo303
       .where(
         invoices: {
           user_id:      @user.id,
-          invoice_type: Invoice.invoice_types[invoice_type]
+          invoice_type: Invoice.invoice_types[invoice_type],
+          status:       "confirmed"
         }
       )
       .where("EXTRACT(year FROM invoices.invoice_date) = ?", @year)

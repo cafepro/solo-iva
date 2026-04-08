@@ -1,0 +1,78 @@
+import { Controller } from "@hotwired/stimulus"
+
+// Handles multi-file PDF upload on the review page.
+// Sends each file to the server, which enqueues a background job.
+// Live status updates arrive via Turbo Streams — no polling needed.
+export default class extends Controller {
+  static targets = ["dropzone", "fileInput"]
+  static values  = { url: String }
+
+  onDragOver(event) {
+    event.preventDefault()
+    this.dropzoneTarget.classList.add("bg-blue-100", "border-blue-500")
+  }
+
+  onDragLeave(event) {
+    if (!this.dropzoneTarget.contains(event.relatedTarget)) {
+      this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+    }
+  }
+
+  onDrop(event) {
+    event.preventDefault()
+    this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+    this.uploadFiles(event.dataTransfer.files)
+  }
+
+  openFilePicker() {
+    this.fileInputTarget.click()
+  }
+
+  onFileChange(event) {
+    this.uploadFiles(event.target.files)
+    event.target.value = ""
+  }
+
+  async uploadFiles(files) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content
+
+    for (const file of files) {
+      this.addOptimisticRow(file.name)
+
+      const formData = new FormData()
+      formData.append("pdfs[]", file)
+      formData.append("authenticity_token", csrfToken)
+
+      try {
+        await fetch(this.urlValue, { method: "POST", body: formData })
+        // Server responds and Turbo Stream replaces the row with real status
+      } catch {
+        this.markRowFailed(file.name)
+      }
+    }
+  }
+
+  // Show an immediate spinner row while the server processes the upload
+  addOptimisticRow(filename) {
+    const queue = document.getElementById("upload_queue")
+    if (!queue) return
+
+    const row = document.createElement("div")
+    row.id = `optimistic_${CSS.escape(filename)}`
+    row.className = "flex items-center gap-3 px-4 py-2 text-sm bg-white rounded-lg border"
+    row.innerHTML = `
+      <svg class="w-4 h-4 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+      </svg>
+      <span class="flex-1 text-gray-700 truncate">${filename}</span>
+      <span class="text-xs text-gray-400">Subiendo…</span>
+    `
+    queue.appendChild(row)
+  }
+
+  markRowFailed(filename) {
+    const row = document.getElementById(`optimistic_${CSS.escape(filename)}`)
+    if (row) row.querySelector("span:last-child").textContent = "Error al subir"
+  }
+}

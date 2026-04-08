@@ -4,6 +4,10 @@ class Invoice < ApplicationRecord
   accepts_nested_attributes_for :invoice_lines, allow_destroy: true, reject_if: :all_blank
 
   enum :invoice_type, { emitida: 0, recibida: 1 }
+  enum :status, { pending: "pending", confirmed: "confirmed" }, default: "confirmed"
+
+  scope :pending_review, -> { where(status: "pending") }
+  scope :for_accounting, -> { where(status: "confirmed") }
 
   validates :invoice_type, :invoice_date, :invoice_number, presence: true
   validates :invoice_number, uniqueness: { scope: %i[user_id invoice_type],

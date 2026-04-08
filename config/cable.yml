@@ -1,0 +1,9 @@
+# Async works for single-process dev; use Redis or solid_cable in production if you scale horizontally.
+development:
+  adapter: async
+
+test:
+  adapter: test
+
+production:
+  adapter: async

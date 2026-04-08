@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => "/cable"
+
   devise_for :users
 
   authenticate :user do
@@ -9,6 +11,11 @@ Rails.application.routes.draw do
       collection do
         post :upload_pdf
         post :bulk_create
+        get  :review
+        post :upload_pdfs
+      end
+      member do
+        patch :confirm
       end
     end
 
