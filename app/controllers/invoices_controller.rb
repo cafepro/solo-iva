@@ -91,7 +91,18 @@ class InvoicesController < ApplicationController
 
   def destroy
     DestroyInvoice.new(invoice: @invoice).call
-    redirect_to invoices_path, notice: "Factura eliminada."
+
+    case params[:return_to]
+    when "review"
+      redirect_to review_invoices_path, notice: "Factura eliminada."
+    else
+      path = if %w[emitida recibida].include?(params[:invoice_type])
+        invoices_path(invoice_type: params[:invoice_type])
+      else
+        invoices_path
+      end
+      redirect_to path, notice: "Factura eliminada."
+    end
   end
 
   def bulk_create
