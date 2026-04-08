@@ -34,37 +34,37 @@
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">01</td>
           <td class="px-4 py-3 text-gray-600">Base imponible al 21%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_01], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_01] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">02</td>
           <td class="px-4 py-3 text-gray-600">Cuota al 21%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_02], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_02] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">03</td>
           <td class="px-4 py-3 text-gray-600">Base imponible al 10%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_03], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_03] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">04</td>
           <td class="px-4 py-3 text-gray-600">Cuota al 10%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_04], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_04] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">05</td>
           <td class="px-4 py-3 text-gray-600">Base imponible al 4%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_05], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_05] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-blue-700 font-bold">06</td>
           <td class="px-4 py-3 text-gray-600">Cuota al 4%</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_06], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_06] %></td>
         </tr>
         <tr class="bg-blue-50 font-bold">
           <td class="px-4 py-3 font-mono text-blue-800">46</td>
           <td class="px-4 py-3 text-blue-800">TOTAL IVA devengado</td>
-          <td class="px-4 py-3 text-right text-blue-800"><%= number_to_currency(@report[:casilla_46], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right text-blue-800"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_46] %></td>
         </tr>
       </tbody>
     </table>
@@ -87,17 +87,17 @@
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-orange-600 font-bold">28</td>
           <td class="px-4 py-3 text-gray-600">Base imponible deducible</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_28], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_28] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-mono text-orange-600 font-bold">29</td>
           <td class="px-4 py-3 text-gray-600">Cuota deducible</td>
-          <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(@report[:casilla_29], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_29] %></td>
         </tr>
         <tr class="bg-orange-50 font-bold">
           <td class="px-4 py-3 font-mono text-orange-800">47</td>
           <td class="px-4 py-3 text-orange-800">TOTAL IVA deducible</td>
-          <td class="px-4 py-3 text-right text-orange-800"><%= number_to_currency(@report[:casilla_47], unit: "€", separator: ",", delimiter: ".") %></td>
+          <td class="px-4 py-3 text-right text-orange-800"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_47] %></td>
         </tr>
       </tbody>
     </table>
@@ -105,16 +105,26 @@
     <%# RESULTADO %>
     <div class="border-t-2 border-gray-200 mt-2">
       <div class="px-4 py-4 <%= @report[:casilla_64] >= 0 ? 'bg-red-50' : 'bg-green-50' %>">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
             <span class="font-mono font-bold text-lg <%= @report[:casilla_64] >= 0 ? 'text-red-700' : 'text-green-700' %>">64</span>
             <span class="ml-2 font-semibold text-gray-700">Resultado</span>
           </div>
           <div class="text-right">
-            <p class="text-2xl font-bold <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
-              <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
-            </p>
-            <p class="text-xs text-gray-500"><%= @report[:casilla_64] >= 0 ? "A ingresar en Hacienda" : "A devolver / compensar" %></p>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <p class="text-2xl font-bold tabular-nums <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
+                <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
+              </p>
+              <button type="button"
+                      class="shrink-0 rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                      data-controller="clipboard-copy"
+                      data-clipboard-copy-text-value="<%= modelo303_copy_value(@report[:casilla_64]) %>"
+                      data-action="clipboard-copy#copy"
+                      title="Copiar importe con formato español (miles con punto, decimales con coma)">
+                Copiar
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1"><%= @report[:casilla_64] >= 0 ? "A ingresar en Hacienda" : "A devolver / compensar" %></p>
           </div>
         </div>
       </div>

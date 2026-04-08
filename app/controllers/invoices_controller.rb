@@ -14,17 +14,37 @@ class InvoicesController < ApplicationController
   end
 
   def confirm
-    ConfirmInvoice.new(invoice: @invoice).call
+    result    = ConfirmInvoice.new(invoice: @invoice).call
     pending_count = current_user.invoices.pending_review.count
 
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: [
-          turbo_stream.remove("pending_invoice_#{@invoice.id}"),
-          turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
-        ]
+        if result[:ok]
+          render turbo_stream: [
+            turbo_stream.remove("pending_invoice_#{@invoice.id}"),
+            turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
+          ]
+        else
+          render turbo_stream: [
+            turbo_stream.replace(
+              "pending_invoice_#{@invoice.id}",
+              partial: "invoices/pending_invoice_card",
+              locals:  {
+                invoice:       result[:invoice].reload,
+                confirm_error: result[:invoice].errors.full_messages.to_sentence
+              }
+            ),
+            turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
+          ], status: :unprocessable_entity
+        end
       end
-      format.html { redirect_to review_invoices_path }
+      format.html do
+        if result[:ok]
+          redirect_to review_invoices_path, notice: "Factura confirmada."
+        else
+          redirect_to review_invoices_path, alert: result[:invoice].errors.full_messages.to_sentence
+        end
+      end
     end
   end
 
@@ -68,7 +88,13 @@ class InvoicesController < ApplicationController
     @invoice = result[:invoice]
 
     if result[:ok]
-      redirect_to invoices_path, notice: "Factura actualizada correctamente."
+      notice = if @invoice.reload.pending?
+        "Factura guardada. Sigue en «Revisión» hasta que la confirmes."
+      else
+        "Factura actualizada correctamente."
+      end
+      path = @invoice.pending? ? review_invoices_path : invoices_path
+      redirect_to path, notice: notice
     else
       render :edit, status: :unprocessable_entity
     end
