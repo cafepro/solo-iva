@@ -6,11 +6,20 @@ class ParsePdfInvoice
   end
 
   # Returns an array of PdfExtractionResult (one per invoice found in the PDF).
+  # Uses Gemini when configured; if that yields nothing (quota, empty model output, etc.),
+  # falls back to heuristics on the extracted text.
   def call
-    api_key = Rails.application.credentials.gemini_api_key
-    raise ParseError, "Gemini API key not configured" unless api_key.present?
+    text = extract_text
 
-    Pdf::GeminiExtractor.new(extract_text, api_key: api_key).extract
+    results = []
+    api_key = Rails.application.credentials.gemini_api_key
+    if api_key.present?
+      results = Pdf::GeminiExtractor.new(text, api_key: api_key).extract
+    end
+
+    results = Pdf::HeuristicInvoiceExtractor.new(text).extract if results.empty?
+
+    results
   rescue ParseError
     raise
   rescue => e

@@ -30,7 +30,7 @@ RSpec.describe Pdf::GeminiExtractor do
 
       before do
         fake_conn = instance_double(Faraday::Connection)
-        fake_resp = instance_double(Faraday::Response, body: gemini_response)
+        fake_resp = instance_double(Faraday::Response, body: gemini_response, success?: true)
         allow(Faraday).to receive(:new).and_return(fake_conn)
         allow(fake_conn).to receive(:post).and_return(fake_resp)
       end
@@ -81,7 +81,7 @@ RSpec.describe Pdf::GeminiExtractor do
 
       before do
         fake_conn = instance_double(Faraday::Connection)
-        fake_resp = instance_double(Faraday::Response, body: gemini_response)
+        fake_resp = instance_double(Faraday::Response, body: gemini_response, success?: true)
         allow(Faraday).to receive(:new).and_return(fake_conn)
         allow(fake_conn).to receive(:post).and_return(fake_resp)
       end

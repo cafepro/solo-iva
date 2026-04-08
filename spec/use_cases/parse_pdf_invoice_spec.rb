@@ -58,8 +58,9 @@ RSpec.describe ParsePdfInvoice do
     context "when no API key is configured" do
       before { allow(Rails.application.credentials).to receive(:gemini_api_key).and_return(nil) }
 
-      it "raises ParseError" do
-        expect { described_class.new(source).call }.to raise_error(ParsePdfInvoice::ParseError)
+      it "falls back to heuristics (empty when text does not match patterns)" do
+        results = described_class.new(source).call
+        expect(results).to eq([])
       end
     end
 

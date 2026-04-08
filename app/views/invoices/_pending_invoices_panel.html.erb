@@ -1,0 +1,13 @@
+<div id="pending_invoices" class="space-y-4">
+  <% if invoices.any? %>
+    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      Facturas pendientes de revisión (<%= invoices.count %>)
+    </h2>
+    <%= render partial: "invoices/pending_invoice_card", collection: invoices, as: :invoice %>
+  <% else %>
+    <div class="text-center py-16 text-gray-400">
+      <p class="text-lg mb-1">No hay facturas pendientes</p>
+      <p class="text-sm">Sube un PDF para empezar.</p>
+    </div>
+  <% end %>
+</div>

@@ -75,11 +75,12 @@ class ProcessPdfUploadJob < ApplicationJob
       locals:  { count: pending_count }
     )
 
-    Turbo::StreamsChannel.broadcast_prepend_to(
+    pending = upload.user.invoices.pending_review.includes(:invoice_lines).order(:created_at)
+    Turbo::StreamsChannel.broadcast_replace_to(
       "pending_invoices_#{upload.user_id}",
       target:  "pending_invoices",
-      partial: "invoices/pending_invoice_cards",
-      locals:  { invoices: upload.user.invoices.pending_review.where(created_at: 1.second.ago..) }
+      partial: "invoices/pending_invoices_panel",
+      locals:  { invoices: pending }
     )
   end
 end

@@ -14,7 +14,16 @@ module Pdf
 
     def extract
       response = call_api
+      unless response.success?
+        err = response.body.is_a?(Hash) ? response.body.dig("error", "message") : nil
+        Rails.logger.warn("GeminiExtractor HTTP #{response.status}: #{err || response.body}")
+        return []
+      end
+
       parse_response(response)
+    rescue Faraday::Error => e
+      Rails.logger.warn("GeminiExtractor failed: #{e.message}")
+      []
     rescue => e
       Rails.logger.warn("GeminiExtractor failed: #{e.message}")
       []
@@ -36,21 +45,40 @@ module Pdf
     end
 
     def parse_response(response)
-      raw  = response.body.dig("candidates", 0, "content", "parts", 0, "text")
-      json = JSON.parse(raw&.gsub(/```json\n?|\n?```/, "") || "{}")
+      body = response.body
+      if body.is_a?(Hash) && body["error"].present?
+        Rails.logger.warn("GeminiExtractor API error: #{body['error']}")
+        return []
+      end
+
+      raw = body.dig("candidates", 0, "content", "parts", 0, "text")
+      return [] if raw.blank?
+
+      json = JSON.parse(raw.gsub(/```json\n?|\n?```/, ""))
 
       invoices = json["invoices"] || []
-      invoices.map { |inv| build_result(inv) }
+      invoices.filter_map { |inv| build_result(inv) }
+    rescue JSON::ParserError => e
+      Rails.logger.warn("GeminiExtractor invalid JSON: #{e.message}")
+      []
     end
 
     def build_result(inv)
       PdfExtractionResult.new(
         invoice_number: inv["invoice_number"],
-        invoice_date:   inv["invoice_date"] ? Date.parse(inv["invoice_date"]) : nil,
+        invoice_date:   parse_model_date(inv["invoice_date"]),
         issuer_name:    inv["issuer_name"],
         issuer_nif:     inv["issuer_nif"],
         lines:          (inv["lines"] || []).map(&:symbolize_keys)
       )
+    end
+
+    def parse_model_date(value)
+      return nil if value.blank?
+
+      Date.parse(value.to_s)
+    rescue ArgumentError, Date::Error
+      nil
     end
 
     def prompt
