@@ -1,5 +1,13 @@
 class ProcessPdfUploadJob < ApplicationJob
-  queue_as :default
+  # Cola dedicada: un solo hilo en Solid Queue (ver config/queue.yml) para no lanzar
+  # varios PDFs a la vez. Además, limits_concurrency evita solaparse si hubiera más
+  # procesos o si el control de concurrencia caduca tras `duration`.
+  queue_as :pdf_import
+
+  limits_concurrency key: ->(_pdf_upload_id) { "gemini_pdf_invoice_extract" },
+                     to: 1,
+                     duration: 2.hours,
+                     group: "GeminiPdfInvoiceImport"
 
   def perform(pdf_upload_id)
     upload = PdfUpload.find_by(id: pdf_upload_id)
