@@ -21,6 +21,12 @@
         class: "shrink-0 text-xs text-gray-500 hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 cursor-pointer border-0 bg-transparent" do %>
       Cancelar
     <% end %>
+  <% elsif upload.done? || upload.failed? %>
+    <%= button_to pdf_upload_path(upload), method: :delete,
+        form: { data: { turbo_confirm: "¿Quitar esta fila de la lista?" } },
+        class: "shrink-0 text-xs text-gray-500 hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 cursor-pointer border-0 bg-transparent" do %>
+      Quitar
+    <% end %>
   <% end %>
   <% if upload.failed? && upload.error_message.present? %>
     <%= tag.span truncate(upload.error_message, length: 90),

@@ -17,10 +17,10 @@
       <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div class="flex items-center gap-6">
           <%= link_to "SoloIVA", dashboard_path, class: "font-bold text-blue-700 text-lg" %>
+          <%= render "layouts/pending_badge", count: current_user.invoices.pending_review.count %>
           <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
           <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
           <%= link_to "Modelo 303", modelo303_reports_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= render "layouts/pending_badge", count: current_user.invoices.pending_review.count %>
         </div>
         <div class="flex items-center gap-4 text-sm text-gray-500">
           <span><%= current_user.email %></span>

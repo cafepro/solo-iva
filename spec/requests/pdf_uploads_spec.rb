@@ -28,13 +28,14 @@ RSpec.describe "PdfUploads", type: :request do
       expect(PdfUpload.exists?(upload.id)).to be true
     end
 
-    it "rejects destroying a completed upload" do
+    it "removes a completed upload so the queue row can be cleared (invoices stay)" do
       upload = create(:pdf_upload, user: user, status: :done)
 
       delete pdf_upload_path(upload), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(PdfUpload.exists?(upload.id)).to be true
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(PdfUpload.exists?(upload.id)).to be false
     end
   end
 end

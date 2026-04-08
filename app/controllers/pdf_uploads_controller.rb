@@ -2,14 +2,10 @@ class PdfUploadsController < ApplicationController
   def destroy
     upload = current_user.pdf_uploads.find(params[:id])
 
-    unless upload.pending? || upload.processing?
-      respond_to do |format|
-        format.turbo_stream { head :unprocessable_content }
-        format.html { redirect_to review_invoices_path, alert: "Esta subida ya no se puede cancelar." }
-      end
-      return
-    end
-
+    # Always allow removing the row. Pending/processing: cancels an in-flight upload (the job
+    # exits early if the record disappears). Done/failed: clears the item from the queue
+    # (invoices already created are unchanged). This avoids 422 when the UI is stale behind
+    # Turbo Streams / Action Cable.
     id = upload.id
     upload.destroy!
 
