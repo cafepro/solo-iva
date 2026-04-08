@@ -12,7 +12,21 @@ class InvoicesController < ApplicationController
     uploads = Array(params[:pdfs]).map do |file|
       CreatePdfUpload.new(user: current_user, file: file).call
     end
-    render json: { uploads: uploads.map { |u| { id: u.id, filename: u.filename, status: u.status } } }
+    render json: {
+      uploads: uploads.map do |u|
+        {
+          id:       u.id,
+          filename: u.filename,
+          status:   u.status,
+          html:     render_to_string(
+            partial: "invoices/pdf_upload_row",
+            locals:  { upload: u },
+            layout:  false,
+            formats: [ :html ]
+          )
+        }
+      end
+    }
   rescue => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -106,7 +120,9 @@ class InvoicesController < ApplicationController
 
     invoices = results.map do |result|
       data = result.to_h
-      data[:duplicate] = current_user.invoices.exists?(invoice_number: result.invoice_number) if result.invoice_number.present?
+      if result.invoice_number.present?
+        data[:duplicate] = current_user.invoices.for_accounting.exists?(invoice_number: result.invoice_number)
+      end
       data
     end
 

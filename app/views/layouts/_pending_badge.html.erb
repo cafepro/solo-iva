@@ -1,10 +1,10 @@
 <turbo-frame id="pending_badge">
   <% if count > 0 %>
-    <%= link_to review_invoices_path, class: "relative inline-flex items-center" do %>
+    <%= link_to review_invoices_path, class: "relative inline-flex items-center", data: { turbo_frame: "_top" } do %>
       <span class="text-sm text-gray-600 hover:text-blue-600">Revisión</span>
       <span class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"><%= count %></span>
     <% end %>
   <% else %>
-    <%= link_to "Revisión", review_invoices_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
+    <%= link_to "Revisión", review_invoices_path, class: "text-sm text-gray-600 hover:text-blue-600", data: { turbo_frame: "_top" } %>
   <% end %>
 </turbo-frame>

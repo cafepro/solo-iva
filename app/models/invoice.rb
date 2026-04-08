@@ -10,8 +10,7 @@ class Invoice < ApplicationRecord
   scope :for_accounting, -> { where(status: "confirmed") }
 
   validates :invoice_type, :invoice_date, :invoice_number, presence: true
-  validates :invoice_number, uniqueness: { scope: %i[user_id invoice_type],
-                                           message: "ya existe una factura %{value} de este tipo" }
+  validate :invoice_number_unique_among_confirmed, if: :confirmed?
 
   def totals
     InvoiceTotals.new(invoice_lines)
@@ -27,5 +26,22 @@ class Invoice < ApplicationRecord
 
   def year
     QuarterCalculator.year_for(invoice_date)
+  end
+
+  private
+
+  def invoice_number_unique_among_confirmed
+    return if invoice_number.blank?
+
+    scope = self.class.where(
+      user_id:        user_id,
+      invoice_type: invoice_type,
+      invoice_number: invoice_number,
+      status:         :confirmed
+    )
+    scope = scope.where.not(id: id) if persisted?
+    return unless scope.exists?
+
+    errors.add(:invoice_number, "ya existe una factura confirmada con este número para este tipo")
   end
 end

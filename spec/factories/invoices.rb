@@ -12,5 +12,9 @@ FactoryBot.define do
     trait :recibida do
       invoice_type { :recibida }
     end
+
+    trait :pending do
+      status { :pending }
+    end
   end
 end
