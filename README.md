@@ -23,4 +23,20 @@ bundle install
 rails db:setup
 rails server
 ```
+
+## AI keys (PDF invoice import)
+
+Parsing uploaded PDFs tries **Google Gemini** first, then **Groq** if Gemini returns no invoices, then heuristics on the extracted text.
+
+Add both keys to encrypted credentials:
+
+```bash
+bin/rails credentials:edit
 ```
+
+| Key | Purpose |
+| --- | --- |
+| `gemini_api_key` | [Google AI Studio](https://aistudio.google.com/apikey) — Generative Language API |
+| `groq_api_key` | [Groq Console](https://console.groq.com/keys) — OpenAI-compatible chat API |
+
+For local development you can also set `GROQ_API_KEY` in the environment; if present, it is used when credentials do not define `groq_api_key` (or the credentials method is missing).

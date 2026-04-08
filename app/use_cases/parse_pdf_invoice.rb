@@ -6,16 +6,12 @@ class ParsePdfInvoice
   end
 
   # Returns an array of PdfExtractionResult (one per invoice found in the PDF).
-  # Uses Gemini when configured; if that yields nothing (quota, empty model output, etc.),
-  # falls back to heuristics on the extracted text.
+  # Tries Gemini, then Groq when configured; if both yield nothing, falls back to heuristics.
   def call
     text = extract_text
 
-    results = []
-    api_key = Rails.application.credentials.gemini_api_key
-    if api_key.present?
-      results = Pdf::GeminiExtractor.new(text, api_key: api_key).extract
-    end
+    results = Pdf::GeminiExtractor.new(text).extract
+    results = Pdf::GroqExtractor.new(text).extract if results.empty?
 
     results = Pdf::HeuristicInvoiceExtractor.new(text).extract if results.empty?
 
@@ -28,8 +24,10 @@ class ParsePdfInvoice
 
   private
 
+  attr_reader :source
+
   def extract_text
-    @source.rewind if @source.respond_to?(:rewind)
-    PDF::Reader.new(@source).pages.map(&:text).join("\n")
+    source.rewind if source.respond_to?(:rewind)
+    PDF::Reader.new(source).pages.map(&:text).join("\n")
   end
 end

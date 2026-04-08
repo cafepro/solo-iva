@@ -1,6 +1,8 @@
 module Pdf
-  # Sends invoice text to Gemini and returns PdfExtractionResult objects.
-  class GeminiExtractor
+  # Sends invoice text to Groq (OpenAI-compatible API) and returns PdfExtractionResult objects.
+  class GroqExtractor
+    MODEL = "llama-3.3-70b-versatile"
+
     def initialize(text, client: nil)
       @text            = text
       @client_override = client
@@ -10,19 +12,19 @@ module Pdf
       c = resolved_client
       return [] if c.nil?
 
-      response = c.generate_content(InvoiceExtractionPrompt.build(text))
+      response = c.chat_completion(InvoiceExtractionPrompt.build(text))
       unless response.success?
         err = response.body.is_a?(Hash) ? response.body.dig("error", "message") : nil
-        Rails.logger.warn("GeminiExtractor HTTP #{response.status}: #{err || response.body}")
+        Rails.logger.warn("GroqExtractor HTTP #{response.status}: #{err || response.body}")
         return []
       end
 
       parse_response(response)
     rescue Faraday::Error => e
-      Rails.logger.warn("GeminiExtractor failed: #{e.message}")
+      Rails.logger.warn("GroqExtractor failed: #{e.message}")
       []
     rescue => e
-      Rails.logger.warn("GeminiExtractor failed: #{e.message}")
+      Rails.logger.warn("GroqExtractor failed: #{e.message}")
       []
     end
 
@@ -37,27 +39,32 @@ module Pdf
     end
 
     def build_default_client
-      key = Rails.application.credentials.gemini_api_key
+      key = groq_api_key
       return nil if key.blank?
 
-      Clients::GeminiClient.new(api_key: key)
+      Clients::GroqClient.new(api_key: key, model: MODEL)
+    end
+
+    def groq_api_key
+      k = Rails.application.credentials.groq_api_key
+      k.presence || ENV["GROQ_API_KEY"]
     rescue NoMethodError
-      nil
+      ENV["GROQ_API_KEY"]
     end
 
     def parse_response(response)
       body = response.body
       if body.is_a?(Hash) && body["error"].present?
-        Rails.logger.warn("GeminiExtractor API error: #{body['error']}")
+        Rails.logger.warn("GroqExtractor API error: #{body['error']}")
         return []
       end
 
-      raw = body.dig("candidates", 0, "content", "parts", 0, "text")
+      raw = body.dig("choices", 0, "message", "content")
       return [] if raw.blank?
 
       results = InvoiceExtractionResponseParser.parse(raw)
       if results.empty?
-        Rails.logger.warn("GeminiExtractor invalid or empty JSON from model")
+        Rails.logger.warn("GroqExtractor invalid or empty JSON from model")
       end
       results
     end

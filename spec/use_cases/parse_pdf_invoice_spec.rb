@@ -55,8 +55,42 @@ RSpec.describe ParsePdfInvoice do
       end
     end
 
-    context "when no API key is configured" do
-      before { allow(Rails.application.credentials).to receive(:gemini_api_key).and_return(nil) }
+    context "when Gemini returns nothing but Groq returns a result" do
+      let(:groq_results) do
+        [PdfExtractionResult.new(
+          invoice_number: "G-001",
+          invoice_date:   Date.new(2024, 2, 1),
+          issuer_name:    "Groq SL",
+          issuer_nif:     "B11111111",
+          lines:          [{ iva_rate: 21, base_imponible: 200.0, iva_amount: 42.0 }]
+        )]
+      end
+
+      before do
+        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
+        allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return([])
+        allow_any_instance_of(Pdf::GroqExtractor).to receive(:extract).and_return(groq_results)
+      end
+
+      it "uses Groq before heuristics" do
+        results = described_class.new(source).call
+        expect(results.first.invoice_number).to eq("G-001")
+      end
+    end
+
+    context "when no Gemini or Groq API key is configured" do
+      around do |example|
+        was_groq = ENV.fetch("GROQ_API_KEY", nil)
+        ENV.delete("GROQ_API_KEY")
+        example.run
+      ensure
+        ENV["GROQ_API_KEY"] = was_groq if was_groq
+      end
+
+      before do
+        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return(nil)
+        allow(Rails.application.credentials).to receive(:groq_api_key).and_return(nil)
+      end
 
       it "falls back to heuristics (empty when text does not match patterns)" do
         results = described_class.new(source).call

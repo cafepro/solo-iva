@@ -1,10 +1,10 @@
 require "rails_helper"
 
 RSpec.describe Pdf::GeminiExtractor do
-  let(:api_key) { "test-api-key" }
   let(:sample_text) { "Factura F-001\nFecha: 01/01/2024\nBase: 100€" }
+  let(:client) { instance_double(Pdf::Clients::GeminiClient) }
 
-  subject(:extractor) { described_class.new(sample_text, api_key: api_key) }
+  subject(:extractor) { described_class.new(sample_text, client: client) }
 
   describe "#extract" do
     context "when the API returns a single invoice" do
@@ -28,11 +28,12 @@ RSpec.describe Pdf::GeminiExtractor do
         }
       end
 
+      let(:faraday_response) do
+        instance_double(Faraday::Response, body: gemini_response, success?: true)
+      end
+
       before do
-        fake_conn = instance_double(Faraday::Connection)
-        fake_resp = instance_double(Faraday::Response, body: gemini_response, success?: true)
-        allow(Faraday).to receive(:new).and_return(fake_conn)
-        allow(fake_conn).to receive(:post).and_return(fake_resp)
+        allow(client).to receive(:generate_content).and_return(faraday_response)
       end
 
       it "returns an array with one PdfExtractionResult" do
@@ -79,11 +80,12 @@ RSpec.describe Pdf::GeminiExtractor do
         }
       end
 
+      let(:faraday_response) do
+        instance_double(Faraday::Response, body: gemini_response, success?: true)
+      end
+
       before do
-        fake_conn = instance_double(Faraday::Connection)
-        fake_resp = instance_double(Faraday::Response, body: gemini_response, success?: true)
-        allow(Faraday).to receive(:new).and_return(fake_conn)
-        allow(fake_conn).to receive(:post).and_return(fake_resp)
+        allow(client).to receive(:generate_content).and_return(faraday_response)
       end
 
       it "returns an array with all invoices" do
@@ -94,7 +96,7 @@ RSpec.describe Pdf::GeminiExtractor do
     end
 
     context "when the API call fails" do
-      before { allow(Faraday).to receive(:new).and_raise(Faraday::Error, "connection refused") }
+      before { allow(client).to receive(:generate_content).and_raise(Faraday::Error, "connection refused") }
 
       it "returns an empty array without raising" do
         expect(extractor.extract).to eq([])
