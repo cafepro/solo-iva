@@ -28,4 +28,19 @@ RSpec.describe Pdf::HeuristicInvoiceExtractor do
   it "returns empty array when required fields are missing" do
     expect(described_class.new("sin datos de factura").extract).to eq([])
   end
+
+  it "accepts Fecha de factura: (common on utility PDFs) instead of only Fecha:" do
+    text = <<~TEXT
+      EMPRESA MUNICIPAL
+      Nº Factura: 1261042548
+      Fecha de factura: 10/02/2026
+      Base          100,00€
+      21% I.V.A.           21,00 €
+    TEXT
+
+    results = described_class.new(text).extract
+    expect(results.size).to eq(1)
+    expect(results.first.invoice_number).to eq("1261042548")
+    expect(results.first.invoice_date).to eq(Date.new(2026, 2, 10))
+  end
 end

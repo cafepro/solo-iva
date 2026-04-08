@@ -139,7 +139,15 @@ class InvoicesController < ApplicationController
       data
     end
 
-    render json: { invoices: invoices }
+    payload = { invoices: invoices }
+    if invoices.empty?
+      payload[:extraction_note] =
+        "No se extrajo ninguna factura. Suele deberse a límites de cuota de las APIs de IA (error 429), " \
+        "a un PDF escaneado sin texto seleccionable o a un formato que aún no reconocemos. " \
+        "Prueba más tarde o comprueba las claves en credentials (Gemini / Groq)."
+    end
+
+    render json: payload
   rescue ParsePdfInvoice::ParseError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end

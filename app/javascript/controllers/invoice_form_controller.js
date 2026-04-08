@@ -53,7 +53,10 @@ export default class extends Controller {
       if (data.error) { this.setStatus("Error: " + data.error); return }
 
       const invoices = data.invoices || []
-      if (invoices.length === 0) { this.setStatus("No se encontraron facturas en el PDF."); return }
+      if (invoices.length === 0) {
+        this.setStatus(data.extraction_note || "No se encontraron facturas en el PDF.")
+        return
+      }
 
       if (invoices.length === 1) {
         this.loadInvoice(invoices[0])

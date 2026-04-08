@@ -1,23 +1,29 @@
 module Pdf
   # Sends invoice text to Gemini and returns PdfExtractionResult objects.
   class GeminiExtractor
+    # Primary model first; on 429/503 or empty JSON, try lite (separate quota pool on free tier).
+    MODEL_CHAIN = %w[gemini-2.5-flash gemini-2.5-flash-lite].freeze
+
     def initialize(text, client: nil)
       @text            = text
       @client_override = client
     end
 
     def extract
-      c = resolved_client
-      return [] if c.nil?
-
-      response = c.generate_content(InvoiceExtractionPrompt.build(text))
-      unless response.success?
-        err = response.body.is_a?(Hash) ? response.body.dig("error", "message") : nil
-        Rails.logger.warn("GeminiExtractor HTTP #{response.status}: #{err || response.body}")
-        return []
+      if @client_override
+        return run_with_client(@client_override)
       end
 
-      parse_response(response)
+      key = gemini_api_key
+      return [] if key.blank?
+
+      MODEL_CHAIN.each do |model|
+        client = Clients::GeminiClient.new(api_key: key, model: model)
+        results = run_with_client(client)
+        return results if results.any?
+      end
+
+      []
     rescue Faraday::Error => e
       Rails.logger.warn("GeminiExtractor failed: #{e.message}")
       []
@@ -30,19 +36,21 @@ module Pdf
 
     attr_reader :text
 
-    def resolved_client
-      return @client_override unless @client_override.nil?
-
-      @default_client ||= build_default_client
-    end
-
-    def build_default_client
-      key = Rails.application.credentials.gemini_api_key
-      return nil if key.blank?
-
-      Clients::GeminiClient.new(api_key: key)
+    def gemini_api_key
+      Rails.application.credentials.gemini_api_key
     rescue NoMethodError
       nil
+    end
+
+    def run_with_client(client)
+      response = client.generate_content(InvoiceExtractionPrompt.build(text))
+      unless response.success?
+        err = response.body.is_a?(Hash) ? response.body.dig("error", "message") : nil
+        Rails.logger.warn("GeminiExtractor HTTP #{response.status}: #{err || response.body}")
+        return []
+      end
+
+      parse_response(response)
     end
 
     def parse_response(response)

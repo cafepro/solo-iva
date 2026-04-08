@@ -8,7 +8,7 @@ module Pdf
 
     def extract
       invoice_number = @text.match(/N[ºª°]?\s*Factura:\s*([A-Za-z0-9\-]+)/i)&.[](1)&.strip
-      date_raw       = @text.match(/Fecha:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i)&.[](1)
+      date_raw       = match_invoice_date_raw
       base_raw       = @text.match(/Base\s+([\d.,]+)\s*€/i)&.[](1)
       iva_match      = match_iva_line
 
@@ -38,6 +38,18 @@ module Pdf
     end
 
     private
+
+    def match_invoice_date_raw
+      [
+        /Fecha de factura:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i,
+        /Fecha de emisión:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i,
+        /Fecha:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i
+      ].each do |pattern|
+        m = @text.match(pattern)
+        return m[1] if m
+      end
+      nil
+    end
 
     def match_iva_line
       @text.match(/(\d{1,2})%\s*I\.V\.A\.\s+([\d.,]+)\s*€/i) ||
