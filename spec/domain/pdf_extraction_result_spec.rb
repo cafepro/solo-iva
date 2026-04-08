@@ -8,7 +8,7 @@ RSpec.describe PdfExtractionResult do
       invoice_date:   Date.new(2024, 3, 15),
       issuer_name:    "Acme SL",
       issuer_nif:     "B12345678",
-      lines:          [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]
+      lines:          [ { iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 } ]
     )
   end
 

@@ -10,13 +10,13 @@ RSpec.describe ParsePdfInvoice do
   describe "#call" do
     context "when Gemini returns a valid result" do
       let(:gemini_results) do
-        [PdfExtractionResult.new(
+        [ PdfExtractionResult.new(
           invoice_number: "F-001",
           invoice_date:   Date.new(2024, 1, 1),
           issuer_name:    "Acme SL",
           issuer_nif:     "B12345678",
-          lines:          [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]
-        )]
+          lines:          [ { iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 } ]
+        ) ]
       end
 
       before do
@@ -36,10 +36,10 @@ RSpec.describe ParsePdfInvoice do
         [
           PdfExtractionResult.new(invoice_number: "F-001", invoice_date: Date.new(2024, 1, 1),
                                   issuer_name: "Acme SL", issuer_nif: "B12345678",
-                                  lines: [{ iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 }]),
+                                  lines: [ { iva_rate: 21, base_imponible: 100.0, iva_amount: 21.0 } ]),
           PdfExtractionResult.new(invoice_number: "F-002", invoice_date: Date.new(2024, 1, 1),
                                   issuer_name: "Beta SL", issuer_nif: "A87654321",
-                                  lines: [{ iva_rate: 10, base_imponible: 50.0, iva_amount: 5.0 }])
+                                  lines: [ { iva_rate: 10, base_imponible: 50.0, iva_amount: 5.0 } ])
         ]
       end
 
@@ -51,19 +51,19 @@ RSpec.describe ParsePdfInvoice do
       it "returns all invoices found" do
         results = described_class.new(source).call
         expect(results.length).to eq(2)
-        expect(results.map(&:invoice_number)).to eq(["F-001", "F-002"])
+        expect(results.map(&:invoice_number)).to eq([ "F-001", "F-002" ])
       end
     end
 
     context "when Gemini returns nothing but Groq returns a result" do
       let(:groq_results) do
-        [PdfExtractionResult.new(
+        [ PdfExtractionResult.new(
           invoice_number: "G-001",
           invoice_date:   Date.new(2024, 2, 1),
           issuer_name:    "Groq SL",
           issuer_nif:     "B11111111",
-          lines:          [{ iva_rate: 21, base_imponible: 200.0, iva_amount: 42.0 }]
-        )]
+          lines:          [ { iva_rate: 21, base_imponible: 200.0, iva_amount: 42.0 } ]
+        ) ]
       end
 
       before do

@@ -2,7 +2,7 @@
 # Accepts plain line structs — no ActiveRecord dependency.
 # Lines must respond to #iva_rate, #base_imponible, and #iva_amount.
 class Modelo303Report
-  SUPPORTED_RATES = [21, 10, 4].freeze
+  SUPPORTED_RATES = [ 21, 10, 4 ].freeze
 
   attr_reader :casillas
 

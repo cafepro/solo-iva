@@ -10,7 +10,7 @@ class ParsePdfInvoice
   def call
     text = extract_text
 
-    results = [] #Pdf::GeminiExtractor.new(text).extract
+    results = Pdf::GeminiExtractor.new(text).extract
     results = Pdf::GroqExtractor.new(text).extract if results.empty?
 
     results = Pdf::HeuristicInvoiceExtractor.new(text).extract if results.empty?

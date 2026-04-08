@@ -9,20 +9,20 @@ RSpec.describe Pdf::GroqExtractor do
   describe "#extract" do
     let(:groq_response) do
       {
-        "choices" => [{
+        "choices" => [ {
           "message" => {
             "role"    => "assistant",
             "content" => JSON.generate({
-              "invoices" => [{
+              "invoices" => [ {
                 "invoice_number" => "F-001",
                 "invoice_date"   => "2024-01-01",
                 "issuer_name"    => "Acme SL",
                 "issuer_nif"     => "B12345678",
-                "lines"          => [{ "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 }]
-              }]
+                "lines"          => [ { "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 } ]
+              } ]
             })
           }
-        }]
+        } ]
       }
     end
 

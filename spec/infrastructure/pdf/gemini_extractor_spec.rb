@@ -10,21 +10,21 @@ RSpec.describe Pdf::GeminiExtractor do
     context "when the API returns a single invoice" do
       let(:gemini_response) do
         {
-          "candidates" => [{
+          "candidates" => [ {
             "content" => {
-              "parts" => [{
+              "parts" => [ {
                 "text" => JSON.generate({
-                  "invoices" => [{
+                  "invoices" => [ {
                     "invoice_number" => "F-001",
                     "invoice_date"   => "2024-01-01",
                     "issuer_name"    => "Acme SL",
                     "issuer_nif"     => "B12345678",
-                    "lines"          => [{ "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 }]
-                  }]
+                    "lines"          => [ { "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 } ]
+                  } ]
                 })
-              }]
+              } ]
             }
-          }]
+          } ]
         }
       end
 
@@ -61,22 +61,22 @@ RSpec.describe Pdf::GeminiExtractor do
     context "when the API returns multiple invoices" do
       let(:gemini_response) do
         {
-          "candidates" => [{
+          "candidates" => [ {
             "content" => {
-              "parts" => [{
+              "parts" => [ {
                 "text" => JSON.generate({
                   "invoices" => [
                     { "invoice_number" => "F-001", "invoice_date" => "2024-01-01",
                       "issuer_name" => "Acme SL", "issuer_nif" => "B12345678",
-                      "lines" => [{ "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 }] },
+                      "lines" => [ { "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 } ] },
                     { "invoice_number" => "F-002", "invoice_date" => "2024-01-01",
                       "issuer_name" => "Beta SL", "issuer_nif" => "A87654321",
-                      "lines" => [{ "iva_rate" => 10, "base_imponible" => 50.0, "iva_amount" => 5.0 }] }
+                      "lines" => [ { "iva_rate" => 10, "base_imponible" => 50.0, "iva_amount" => 5.0 } ] }
                   ]
                 })
-              }]
+              } ]
             }
-          }]
+          } ]
         }
       end
 
@@ -91,7 +91,7 @@ RSpec.describe Pdf::GeminiExtractor do
       it "returns an array with all invoices" do
         results = extractor.extract
         expect(results.length).to eq(2)
-        expect(results.map(&:invoice_number)).to eq(["F-001", "F-002"])
+        expect(results.map(&:invoice_number)).to eq([ "F-001", "F-002" ])
       end
     end
 

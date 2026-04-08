@@ -27,7 +27,7 @@ RSpec.describe BulkCreateInvoices do
 
     context "when one invoice is invalid" do
       let(:mixed_params) do
-        valid_params + [{ invoice_type: "recibida", invoice_number: "", invoice_date: Date.today }]
+        valid_params + [ { invoice_type: "recibida", invoice_number: "", invoice_date: Date.today } ]
       end
 
       it "saves the valid ones and skips the invalid" do

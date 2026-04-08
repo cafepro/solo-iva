@@ -38,7 +38,7 @@ RSpec.describe InvoiceTotals do
   end
 
   context "with floating point values" do
-    let(:lines) { [InvoiceTotalsLine.new(33.33, 6.999)] }
+    let(:lines) { [ InvoiceTotalsLine.new(33.33, 6.999) ] }
 
     it "rounds to 2 decimal places" do
       expect(totals.iva).to eq(7.0)

@@ -3,13 +3,13 @@ require "rails_helper"
 RSpec.describe Pdf::InvoiceExtractionResponseParser do
   let(:json) do
     {
-      "invoices" => [{
+      "invoices" => [ {
         "invoice_number" => "F-001",
         "invoice_date"   => "2024-01-01",
         "issuer_name"    => "Acme SL",
         "issuer_nif"     => "B12345678",
-        "lines"          => [{ "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 }]
-      }]
+        "lines"          => [ { "iva_rate" => 21, "base_imponible" => 100.0, "iva_amount" => 21.0 } ]
+      } ]
     }
   end
 
