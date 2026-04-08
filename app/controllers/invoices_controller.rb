@@ -50,6 +50,9 @@ class InvoicesController < ApplicationController
     @invoices = current_user.invoices.for_accounting.includes(:invoice_lines)
     @invoices = @invoices.where(invoice_type: params[:invoice_type]) if params[:invoice_type].present?
 
+    @period_year, @period_quarter = parse_period_params
+    @invoices = @invoices.in_calendar_quarter(@period_year, @period_quarter) if @period_year
+
     @sort    = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "invoice_number"
     @dir     = params[:dir] == "desc" ? "desc" : "asc"
     @invoices = @invoices.order(@sort => @dir)
@@ -96,11 +99,10 @@ class InvoicesController < ApplicationController
     when "review"
       redirect_to review_invoices_path, notice: "Factura eliminada."
     else
-      path = if %w[emitida recibida].include?(params[:invoice_type])
-        invoices_path(invoice_type: params[:invoice_type])
-      else
-        invoices_path
-      end
+      path = invoices_path(
+        { invoice_type: params[:invoice_type], year: params[:year], quarter: params[:quarter],
+          sort: params[:sort], dir: params[:dir] }.compact_blank
+      )
       redirect_to path, notice: "Factura eliminada."
     end
   end
@@ -143,6 +145,16 @@ class InvoicesController < ApplicationController
   end
 
   private
+
+  def parse_period_params
+    y = params[:year].presence&.to_i
+    q = params[:quarter].presence&.to_i
+    return [ nil, nil ] if y.blank? || q.blank?
+    return [ nil, nil ] if y < 2000 || y > 2100
+    return [ nil, nil ] if q < 1 || q > 4
+
+    [ y, q ]
+  end
 
   def set_invoice
     @invoice = current_user.invoices.find(params[:id])

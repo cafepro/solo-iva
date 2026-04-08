@@ -1,12 +1,36 @@
 <% content_for :title, "Facturas — SoloIVA" %>
 
-<div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold text-gray-800">Facturas</h1>
-  <div class="flex gap-2">
-    <%= link_to "Todas", invoices_path, class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type].blank? ? 'bg-gray-800 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
-    <%= link_to "Emitidas", invoices_path(invoice_type: "emitida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'emitida' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
-    <%= link_to "Recibidas", invoices_path(invoice_type: "recibida"), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'recibida' ? 'bg-orange-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
-    <%= link_to "+ Nueva factura", new_invoice_path(invoice_type: params[:invoice_type]), class: "text-xs px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 ml-2" %>
+<div class="flex flex-col gap-4 mb-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold text-gray-800">Facturas</h1>
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "Todas", invoices_path(invoices_index_query.except("invoice_type")), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type].blank? ? 'bg-gray-800 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+      <%= link_to "Emitidas", invoices_path(invoices_index_query.merge("invoice_type" => "emitida")), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'emitida' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+      <%= link_to "Recibidas", invoices_path(invoices_index_query.merge("invoice_type" => "recibida")), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'recibida' ? 'bg-orange-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}" %>
+      <%= link_to "+ Nueva factura", new_invoice_path(invoice_type: params[:invoice_type].presence), class: "text-xs px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 ml-2" %>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Periodo (fecha de factura, año natural)</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= link_to "Todos los periodos", invoices_path(invoices_index_query.except("year", "quarter")),
+          class: "text-xs px-2 py-1 rounded #{@period_year.nil? ? 'bg-gray-800 text-white' : 'bg-white border text-gray-600 hover:bg-gray-100'}" %>
+      <%# Solo ejercicio en curso y el anterior (mismo criterio que Modelo 303 en la barra de periodos) %>
+      <% period_years = (Date.today.year - 1)..Date.today.year %>
+      <% period_years.reverse_each do |y| %>
+        <% [1, 2, 3, 4].each do |q| %>
+          <%= link_to "#{y} T#{q}", invoices_path(invoices_index_query.merge("year" => y, "quarter" => q)),
+              class: "text-xs px-2 py-1 rounded #{@period_year == y && @period_quarter == q ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-100'}" %>
+        <% end %>
+      <% end %>
+    </div>
+    <% if @period_year %>
+      <p class="text-xs text-gray-500">
+        <% r = QuarterCalculator.date_range_for_year_quarter(@period_year, @period_quarter) %>
+        Mostrando facturas con fecha entre <%= r.first.strftime("%d/%m/%Y") %> y <%= r.last.strftime("%d/%m/%Y") %>.
+      </p>
+    <% end %>
   </div>
 </div>
 
@@ -44,7 +68,7 @@
                 <%= link_to edit_invoice_path(inv), title: "Editar", class: "p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" do %>
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
                 <% end %>
-                <%= button_to invoice_path(inv, invoice_type: params[:invoice_type].presence), method: :delete, title: "Borrar", data: { turbo_confirm: "¿Seguro que quieres borrar esta factura?" }, class: "p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-0" do %>
+                <%= button_to invoice_path(inv, request.query_parameters.slice("invoice_type", "year", "quarter").compact_blank), method: :delete, title: "Borrar", data: { turbo_confirm: "¿Seguro que quieres borrar esta factura?" }, class: "p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-0" do %>
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>
                 <% end %>
               </div>
@@ -56,7 +80,12 @@
   </div>
 <% else %>
   <div class="text-center py-16 text-gray-400">
-    <p class="text-lg mb-2">No hay facturas todavía</p>
-    <%= link_to "+ Añadir primera factura", new_invoice_path, class: "text-blue-600 hover:underline text-sm" %>
+    <% if @period_year %>
+      <p class="text-lg mb-2">No hay facturas en este periodo</p>
+      <%= link_to "Ver todos los periodos", invoices_path(invoices_index_query.except("year", "quarter")), class: "text-blue-600 hover:underline text-sm" %>
+    <% else %>
+      <p class="text-lg mb-2">No hay facturas todavía</p>
+      <%= link_to "+ Añadir primera factura", new_invoice_path, class: "text-blue-600 hover:underline text-sm" %>
+    <% end %>
   </div>
 <% end %>

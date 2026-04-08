@@ -79,4 +79,15 @@ RSpec.describe Invoice, type: :model do
       expect(invoice.year).to eq(2024)
     end
   end
+
+  describe ".in_calendar_quarter" do
+    it "includes only invoices whose invoice_date falls in that quarter" do
+      user = create(:user)
+      in_q1 = create(:invoice, user: user, invoice_date: Date.new(2025, 3, 31), invoice_number: "IN")
+      create(:invoice, user: user, invoice_date: Date.new(2025, 4, 1), invoice_number: "OUT")
+
+      scope = described_class.where(user: user).in_calendar_quarter(2025, 1)
+      expect(scope.pluck(:invoice_number)).to eq([ in_q1.invoice_number ])
+    end
+  end
 end

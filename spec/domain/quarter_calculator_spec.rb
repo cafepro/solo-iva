@@ -38,4 +38,12 @@ RSpec.describe QuarterCalculator do
       expect(described_class.current_year).to eq(Date.today.year)
     end
   end
+
+  describe ".date_range_for_year_quarter" do
+    it "returns first and last day of the calendar quarter" do
+      start_date, end_date = described_class.date_range_for_year_quarter(2025, 1)
+      expect(start_date).to eq(Date.new(2025, 1, 1))
+      expect(end_date).to eq(Date.new(2025, 3, 31))
+    end
+  end
 end

@@ -9,6 +9,11 @@ class Invoice < ApplicationRecord
   scope :pending_review, -> { where(status: "pending") }
   scope :for_accounting, -> { where(status: "confirmed") }
 
+  scope :in_calendar_quarter, lambda { |year, quarter|
+    start_date, end_date = QuarterCalculator.date_range_for_year_quarter(year, quarter)
+    where(invoice_date: start_date..end_date)
+  }
+
   validates :invoice_type, :invoice_date, :invoice_number, presence: true
   validate :invoice_number_unique_among_confirmed, if: :confirmed?
 
