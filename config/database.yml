@@ -28,6 +28,10 @@ development:
     <<: *default
     database: solo_iva_development_queue
     migrations_paths: db/queue_migrate
+  cable:
+    <<: *default
+    database: solo_iva_development_cable
+    migrations_paths: db/cable_migrate
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -103,3 +107,7 @@ production:
     <<: *primary_production
     database: solo_iva_production_queue
     migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: solo_iva_production_cable
+    migrations_paths: db/cable_migrate

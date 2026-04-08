@@ -27,6 +27,8 @@ class ProcessPdfUploadJob < ApplicationJob
     upload = PdfUpload.find_by(id: pdf_upload_id)
     return unless upload
 
+    saved_count = 0
+
     results.each do |result|
       next if result.invoice_number.blank? || result.lines.empty?
 
@@ -46,13 +48,26 @@ class ProcessPdfUploadJob < ApplicationJob
         )
       end
 
-      invoice.save
+      if invoice.save
+        saved_count += 1
+      else
+        Rails.logger.warn("ProcessPdfUploadJob: factura no guardada (pdf_upload_id=#{pdf_upload_id}): #{invoice.errors.full_messages.join(', ')}")
+      end
     end
 
     upload = PdfUpload.find_by(id: pdf_upload_id)
     return unless upload
 
-    upload.update!(status: :done)
+    if saved_count.zero?
+      msg = if results.empty?
+        "No se pudo extraer ninguna factura del PDF. Suele deberse a cuota agotada de Gemini, PDF escaneado sin texto o un formato que aún no reconocemos."
+      else
+        "Se detectaron datos en el PDF pero ninguna factura pudo guardarse (revisa duplicados o campos obligatorios)."
+      end
+      upload.update!(status: :failed, error_message: msg)
+    else
+      upload.update!(status: :done)
+    end
 
     broadcast_update(upload)
   rescue => e

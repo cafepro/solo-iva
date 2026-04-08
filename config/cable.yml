@@ -1,9 +1,20 @@
-# Async works for single-process dev; use Redis or solid_cable in production if you scale horizontally.
+# solid_cable: los broadcasts llegan a Puma aunque los jobs corran en otro proceso (bin/jobs).
+# async solo sirve si jobs y websockets comparten el mismo proceso Ruby.
 development:
-  adapter: async
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
 
 test:
   adapter: test
 
 production:
-  adapter: async
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day

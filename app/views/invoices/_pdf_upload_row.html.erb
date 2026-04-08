@@ -14,7 +14,7 @@
     </svg>
   <% end %>
   <span class="flex-1 text-gray-700 truncate"><%= upload.filename %></span>
-  <span class="text-xs text-gray-400 capitalize"><%= upload.status %></span>
+  <span class="text-xs text-gray-400"><%= upload.failed? ? "Error" : upload.status.capitalize %></span>
   <% if upload.pending? || upload.processing? %>
     <%= button_to pdf_upload_path(upload), method: :delete,
         form: { data: { turbo_confirm: "¿Descartar esta subida?" } },
@@ -22,7 +22,9 @@
       Cancelar
     <% end %>
   <% end %>
-  <% if upload.failed? && upload.error_message %>
-    <span class="text-xs text-red-500 truncate max-w-xs" title="<%= upload.error_message %>">Error</span>
+  <% if upload.failed? && upload.error_message.present? %>
+    <%= tag.span truncate(upload.error_message, length: 90),
+          class: "text-xs text-red-600 truncate max-w-[min(28rem,55vw)]",
+          title: upload.error_message %>
   <% end %>
 </div>
