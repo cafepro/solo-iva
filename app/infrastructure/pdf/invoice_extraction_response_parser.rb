@@ -12,7 +12,10 @@ module Pdf
     def parse
       return [] if @raw.blank?
 
-      json = JSON.parse(@raw.to_s.gsub(/```json\n?|\n?```/, ""))
+      blob = extract_json_blob(@raw)
+      return [] if blob.blank?
+
+      json = JSON.parse(blob)
       invoices = json["invoices"] || []
       invoices.filter_map { |inv| build_result(inv) }
     rescue JSON::ParserError
@@ -20,6 +23,36 @@ module Pdf
     end
 
     private
+
+    # Models (e.g. Groq/Llama) often prepend analysis before the JSON object.
+    # Gemini usually returns clean JSON; this path handles both.
+    def extract_json_blob(raw)
+      s = raw.to_s.gsub(/```json\n?|\n?```/, "").strip
+      return nil if s.empty?
+
+      begin
+        JSON.parse(s)
+        return s
+      rescue JSON::ParserError
+        # fall through
+      end
+
+      i = s.index("{")
+      return nil unless i
+
+      depth = 0
+      (i...s.length).each do |j|
+        case s[j]
+        when "{"
+          depth += 1
+        when "}"
+          depth -= 1
+          return s[i..j] if depth.zero?
+        end
+      end
+
+      nil
+    end
 
     def build_result(inv)
       PdfExtractionResult.new(

@@ -10,15 +10,22 @@ module Pdf
       end
 
       # @return [Faraday::Response]
-      def chat_completion(user_prompt, temperature: 0.1)
-        connection.post(
-          "/openai/v1/chat/completions",
-          {
-            model:       @model,
-            messages:    [ { role: "user", content: user_prompt } ],
-            temperature: temperature
-          }
-        )
+      # +max_tokens+ reduces truncation when several invoices are returned as JSON.
+      # Optional +system_prompt+ keeps the model from echoing the source text before the JSON (Groq/Llama quirk).
+      def chat_completion(user_prompt, temperature: 0.1, max_tokens: 8192, system_prompt: nil, response_format: nil)
+        messages = []
+        messages << { role: "system", content: system_prompt } if system_prompt.present?
+        messages << { role: "user", content: user_prompt }
+
+        body = {
+          model:       @model,
+          messages:    messages,
+          temperature: temperature,
+          max_tokens:  max_tokens
+        }
+        body[:response_format] = response_format if response_format
+
+        connection.post("/openai/v1/chat/completions", body)
       end
 
       private

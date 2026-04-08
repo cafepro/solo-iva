@@ -15,6 +15,8 @@ module Pdf
       <<~PROMPT
         Extract all invoices found in the following Spanish invoice text and return them as JSON.
         A single PDF may contain more than one invoice (e.g. a combined water + waste bill).
+        If you see different invoice numbers (Nº Factura) or different issuing companies (CIF/razón social del emisor),
+        output one entry in "invoices" per invoice — never merge unrelated bills into a single object.
         Return ONLY the raw JSON object — no explanations, no markdown, no code blocks.
 
         Rules per invoice:

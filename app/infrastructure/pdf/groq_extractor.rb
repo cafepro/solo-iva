@@ -3,6 +3,13 @@ module Pdf
   class GroqExtractor
     MODEL = "llama-3.3-70b-versatile"
 
+    # Groq/Llama often prepends a faux "summary" of the bill; that breaks naive JSON.parse and can exhaust tokens.
+    SYSTEM_PROMPT = <<~TEXT.squish
+      You extract structured data from Spanish invoice text.
+      Your entire reply must be a single JSON object with an "invoices" array, exactly as requested in the user message.
+      Do not repeat, summarize, or re-transcribe the source text — output only valid JSON, no markdown fences.
+    TEXT
+
     def initialize(text, client: nil)
       @text            = text
       @client_override = client
@@ -12,7 +19,11 @@ module Pdf
       c = resolved_client
       return [] if c.nil?
 
-      response = c.chat_completion(InvoiceExtractionPrompt.build(text))
+      response = c.chat_completion(
+        InvoiceExtractionPrompt.build(text),
+        max_tokens:    8192,
+        system_prompt: SYSTEM_PROMPT
+      )
       unless response.success?
         err = response.body.is_a?(Hash) ? response.body.dig("error", "message") : nil
         Rails.logger.warn("GroqExtractor HTTP #{response.status}: #{err || response.body}")
