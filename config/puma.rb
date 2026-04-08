@@ -34,13 +34,13 @@ port ENV.fetch("PORT", 3000)
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
-# Solid Queue dentro de Puma. Por defecto el plugin arranca el supervisor en un
-# proceso hijo (fork): los jobs no comparten el mismo Ruby que WebSockets.
-# En development usamos :async para ejecutar jobs en hilos del mismo proceso y
-# que Turbo Streams + solid_cable reciban los broadcasts sin depender del fork.
+# Solid Queue inside Puma. By default the plugin starts the supervisor in a child process
+# (fork): jobs do not share the same Ruby process as WebSockets.
+# In development we use :async so jobs run on threads in the same process and
+# Turbo Streams + solid_cable receive broadcasts without relying on that fork.
 #
-# Hay que cargar el plugin antes de `solid_queue_mode`: el método se define al
-# require del fichero, no al registrar `plugin :solid_queue` (el config se evalúa en orden).
+# Load the plugin before `solid_queue_mode`: the method is defined when the file is
+# required, not when registering `plugin :solid_queue` (config is evaluated in order).
 if ENV["SOLID_QUEUE_IN_PUMA"]
   require "puma/plugin/solid_queue"
 

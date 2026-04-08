@@ -1,4 +1,19 @@
 <div id="pending_invoice_<%= invoice.id %>" class="bg-white rounded-lg border p-5 space-y-4">
+  <% if local_assigns[:confirm_error].present? %>
+    <div class="rounded border border-red-200 bg-red-50 text-red-800 text-sm px-3 py-2" role="alert">
+      <%= confirm_error %>
+    </div>
+  <% end %>
+  <% if invoice.duplicate_with_confirmed_invoice? %>
+    <div class="rounded border border-amber-200 bg-amber-50 text-amber-900 text-sm px-3 py-2">
+      Ya tienes una factura <strong>confirmada</strong> con este número (mismo tipo). Debes cambiar el número o descartar esta copia antes de confirmar.
+    </div>
+  <% end %>
+  <% if invoice.duplicate_with_other_pending_invoice? %>
+    <div class="rounded border border-amber-200 bg-amber-50 text-amber-900 text-sm px-3 py-2">
+      Hay otra factura <strong>pendiente</strong> con el mismo número. Revisa duplicados en «Revisión» o edita el número.
+    </div>
+  <% end %>
   <div class="flex items-start justify-between gap-4">
     <div class="space-y-1">
       <div class="flex items-center gap-2">

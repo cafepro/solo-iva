@@ -33,6 +33,28 @@ class Invoice < ApplicationRecord
     QuarterCalculator.year_for(invoice_date)
   end
 
+  # Another confirmed invoice (same user, type, number) already exists.
+  def duplicate_with_confirmed_invoice?
+    return false if invoice_number.blank?
+
+    scope = self.class.for_accounting.where(
+      user_id: user_id, invoice_type: invoice_type, invoice_number: invoice_number
+    )
+    scope = scope.where.not(id: id) if persisted?
+    scope.exists?
+  end
+
+  # Another pending invoice (same user, type, number) already exists.
+  def duplicate_with_other_pending_invoice?
+    return false if invoice_number.blank?
+
+    scope = self.class.pending_review.where(
+      user_id: user_id, invoice_type: invoice_type, invoice_number: invoice_number
+    )
+    scope = scope.where.not(id: id) if persisted?
+    scope.exists?
+  end
+
   private
 
   def invoice_number_unique_among_confirmed

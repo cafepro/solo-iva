@@ -3,7 +3,7 @@ default: &default
     - polling_interval: 1
       batch_size: 500
   workers:
-    # Importación PDF → Gemini: un hilo para no disparar la API en paralelo (cuota).
+    # PDF import / extraction APIs: single thread to avoid parallel quota spikes.
     - queues: pdf_import
       threads: 1
       processes: 1

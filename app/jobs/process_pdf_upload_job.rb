@@ -1,7 +1,7 @@
 class ProcessPdfUploadJob < ApplicationJob
-  # Cola dedicada: un solo hilo en Solid Queue (ver config/queue.yml) para no lanzar
-  # varios PDFs a la vez. Además, limits_concurrency evita solaparse si hubiera más
-  # procesos o si el control de concurrencia caduca tras `duration`.
+  # Dedicated queue: single Solid Queue worker thread (see config/queue.yml) so we do not
+  # hammer external APIs in parallel. limits_concurrency also avoids overlap if more
+  # processes run or the concurrency lease expires.
   queue_as :pdf_import
 
   limits_concurrency key: ->(_pdf_upload_id) { "gemini_pdf_invoice_extract" },
@@ -32,6 +32,13 @@ class ProcessPdfUploadJob < ApplicationJob
     results.each do |result|
       next if result.invoice_number.blank? || result.lines.empty?
 
+      if received_invoice_number_taken?(user, result.invoice_number)
+        Rails.logger.info(
+          "ProcessPdfUploadJob: skipping duplicate received invoice_number=#{result.invoice_number.inspect} (pdf_upload_id=#{pdf_upload_id})"
+        )
+        next
+      end
+
       invoice = user.invoices.build(
         status:         :pending,
         invoice_type:   :recibida,
@@ -51,7 +58,7 @@ class ProcessPdfUploadJob < ApplicationJob
       if invoice.save
         saved_count += 1
       else
-        Rails.logger.warn("ProcessPdfUploadJob: factura no guardada (pdf_upload_id=#{pdf_upload_id}): #{invoice.errors.full_messages.join(', ')}")
+        Rails.logger.warn("ProcessPdfUploadJob: invoice not saved (pdf_upload_id=#{pdf_upload_id}): #{invoice.errors.full_messages.join(', ')}")
       end
     end
 
@@ -59,8 +66,14 @@ class ProcessPdfUploadJob < ApplicationJob
     return unless upload
 
     if saved_count.zero?
+      extractable = results.select { |r| r.invoice_number.present? && r.lines.any? }
+
       msg = if results.empty?
         "No se pudo extraer ninguna factura. Suele deberse a cuota de las APIs, a un PDF sin texto seleccionable o a una foto ilegible. Comprueba iluminación y encuadre."
+      elsif extractable.empty?
+        "Se detectaron datos pero ninguna factura pudo guardarse (faltan número o líneas de IVA)."
+      elsif extractable.all? { |r| received_invoice_number_taken?(user, r.invoice_number) }
+        "Las facturas detectadas ya estaban registradas o duplicadas (mismo número de factura recibida)."
       else
         "Se detectaron datos pero ninguna factura pudo guardarse (revisa duplicados o campos obligatorios)."
       end
@@ -86,6 +99,12 @@ class ProcessPdfUploadJob < ApplicationJob
   end
 
   private
+
+  # True if this user already has a received invoice (:recibida) with this number (confirmed or pending).
+  def received_invoice_number_taken?(user, invoice_number)
+    user.invoices.for_accounting.exists?(invoice_type: :recibida, invoice_number: invoice_number) ||
+      user.invoices.pending_review.exists?(invoice_type: :recibida, invoice_number: invoice_number)
+  end
 
   def broadcast_update(upload)
     pending_count = upload.user.invoices.pending_review.count

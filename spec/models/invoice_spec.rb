@@ -80,6 +80,31 @@ RSpec.describe Invoice, type: :model do
     end
   end
 
+  describe "#duplicate_with_confirmed_invoice?" do
+    it "is true when a confirmed invoice shares number and type" do
+      user = create(:user)
+      create(:invoice, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      pending = create(:invoice, :pending, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      expect(pending.duplicate_with_confirmed_invoice?).to be true
+    end
+
+    it "is false when only another pending invoice shares the number" do
+      user = create(:user)
+      create(:invoice, :pending, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      other = create(:invoice, :pending, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      expect(other.duplicate_with_confirmed_invoice?).to be false
+    end
+  end
+
+  describe "#duplicate_with_other_pending_invoice?" do
+    it "is true when another pending invoice shares number and type" do
+      user = create(:user)
+      create(:invoice, :pending, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      other = create(:invoice, :pending, user: user, invoice_number: "X-1", invoice_type: :recibida)
+      expect(other.duplicate_with_other_pending_invoice?).to be true
+    end
+  end
+
   describe ".in_calendar_quarter" do
     it "includes only invoices whose invoice_date falls in that quarter" do
       user = create(:user)

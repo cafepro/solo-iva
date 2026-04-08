@@ -30,7 +30,7 @@ class InvoicesController < ApplicationController
               "pending_invoice_#{@invoice.id}",
               partial: "invoices/pending_invoice_card",
               locals:  {
-                invoice:       result[:invoice].reload,
+                invoice:       result[:invoice],
                 confirm_error: result[:invoice].errors.full_messages.to_sentence
               }
             ),
