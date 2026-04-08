@@ -1,10 +1,59 @@
 module Pdf
-  # Shared prompt for text-based invoice extraction (Gemini, Groq, etc.).
+  # Shared instructions for invoice extraction (text or vision).
   class InvoiceExtractionPrompt
     MAX_CHARS = 12_000
 
+    SHARED_RULES = <<~RULES.freeze
+      Rules per invoice:
+      - "invoice_number": the unique invoice identifier (e.g. "1261042548", "F-2026-001").
+        Must contain at least one digit and be longer than 3 characters. Never use a date or generic word.
+      - "invoice_date": invoice issue date in YYYY-MM-DD format, or null.
+      - "issuer_name": legal name of the company that issued this specific invoice (the supplier/vendor),
+        NOT the recipient or customer.
+      - "issuer_nif": Spanish tax ID (NIF/CIF) of the issuer, or null if not present.
+      - "lines": array of VAT lines for this invoice, each with:
+          - "iva_rate": VAT rate as an integer (0, 4, 10 or 21)
+          - "base_imponible": taxable base amount in euros as a decimal number
+          - "iva_amount": VAT amount in euros as a decimal number
+        Merge lines with the same VAT rate into one. Exclude lines where base_imponible is 0.
+
+      Expected JSON format (always return an "invoices" array, even if there is only one):
+      {
+        "invoices": [
+          {
+            "invoice_number": "string or null",
+            "invoice_date": "YYYY-MM-DD or null",
+            "issuer_name": "string or null",
+            "issuer_nif": "string or null",
+            "lines": [
+              { "iva_rate": 21, "base_imponible": 100.00, "iva_amount": 21.00 }
+            ]
+          }
+        ]
+      }
+    RULES
+
+    TEXT_INTRO = <<~INTRO.freeze
+      Extract all invoices found in the following Spanish invoice text and return them as JSON.
+      A single document may contain more than one invoice (e.g. a combined water + waste bill).
+      If you see different invoice numbers (Nº Factura) or different issuing companies (CIF/razón social del emisor),
+      output one entry in "invoices" per invoice — never merge unrelated bills into a single object.
+      Return ONLY the raw JSON object — no explanations, no markdown, no code blocks.
+    INTRO
+
+    VISION_INTRO = <<~INTRO.freeze
+      You are given an image of a Spanish invoice (photo or scan). Extract all invoices visible in the image and return them as JSON.
+      A single photo may show more than one invoice (e.g. two bills on one page).
+      If you see different invoice numbers or different issuing companies, output one entry in "invoices" per invoice.
+      Return ONLY the raw JSON object — no explanations, no markdown, no code blocks.
+    INTRO
+
     def self.build(text)
       new(text).to_s
+    end
+
+    def self.for_vision
+      [ VISION_INTRO, SHARED_RULES ].join("\n")
     end
 
     def initialize(text)
@@ -12,44 +61,7 @@ module Pdf
     end
 
     def to_s
-      <<~PROMPT
-        Extract all invoices found in the following Spanish invoice text and return them as JSON.
-        A single PDF may contain more than one invoice (e.g. a combined water + waste bill).
-        If you see different invoice numbers (Nº Factura) or different issuing companies (CIF/razón social del emisor),
-        output one entry in "invoices" per invoice — never merge unrelated bills into a single object.
-        Return ONLY the raw JSON object — no explanations, no markdown, no code blocks.
-
-        Rules per invoice:
-        - "invoice_number": the unique invoice identifier (e.g. "1261042548", "F-2026-001").
-          Must contain at least one digit and be longer than 3 characters. Never use a date or generic word.
-        - "invoice_date": invoice issue date in YYYY-MM-DD format, or null.
-        - "issuer_name": legal name of the company that issued this specific invoice (the supplier/vendor),
-          NOT the recipient or customer.
-        - "issuer_nif": Spanish tax ID (NIF/CIF) of the issuer, or null if not present.
-        - "lines": array of VAT lines for this invoice, each with:
-            - "iva_rate": VAT rate as an integer (0, 4, 10 or 21)
-            - "base_imponible": taxable base amount in euros as a decimal number
-            - "iva_amount": VAT amount in euros as a decimal number
-          Merge lines with the same VAT rate into one. Exclude lines where base_imponible is 0.
-
-        Expected JSON format (always return an "invoices" array, even if there is only one):
-        {
-          "invoices": [
-            {
-              "invoice_number": "string or null",
-              "invoice_date": "YYYY-MM-DD or null",
-              "issuer_name": "string or null",
-              "issuer_nif": "string or null",
-              "lines": [
-                { "iva_rate": 21, "base_imponible": 100.00, "iva_amount": 21.00 }
-              ]
-            }
-          ]
-        }
-
-        Invoice text:
-        #{@text.truncate(MAX_CHARS)}
-      PROMPT
+      [ TEXT_INTRO, SHARED_RULES, "Invoice text:\n#{@text.truncate(MAX_CHARS)}" ].join("\n")
     end
   end
 end

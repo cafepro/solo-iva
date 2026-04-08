@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Handles multi-file PDF upload on the review page.
+// Handles multi-file PDF / image upload on the review page.
 // Sends each file to the server, which enqueues a background job.
 // Live status updates arrive via Turbo Streams — no polling needed.
 export default class extends Controller {
@@ -63,6 +63,10 @@ export default class extends Controller {
 
         const data = await response.json()
         const row = data.uploads?.[0]
+        if (row?.error) {
+          this.showUploadError(queue, row.filename || file.name, row.error)
+          continue
+        }
         if (row?.html && queue) {
           queue.insertAdjacentHTML("beforeend", row.html)
         }

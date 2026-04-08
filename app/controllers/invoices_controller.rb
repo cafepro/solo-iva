@@ -9,26 +9,8 @@ class InvoicesController < ApplicationController
   end
 
   def upload_pdfs
-    uploads = Array(params[:pdfs]).map do |file|
-      CreatePdfUpload.new(user: current_user, file: file).call
-    end
-    render json: {
-      uploads: uploads.map do |u|
-        {
-          id:       u.id,
-          filename: u.filename,
-          status:   u.status,
-          html:     render_to_string(
-            partial: "invoices/pdf_upload_row",
-            locals:  { upload: u },
-            layout:  false,
-            formats: [ :html ]
-          )
-        }
-      end
-    }
-  rescue => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    uploads = Array(params[:pdfs]).map { |file| build_pdf_upload_payload(file) }
+    render json: { uploads: uploads }
   end
 
   def confirm
@@ -126,10 +108,13 @@ class InvoicesController < ApplicationController
 
   def upload_pdf
     unless params[:pdf].present?
-      return render json: { error: "No se ha subido ningún PDF" }, status: :bad_request
+      return render json: { error: "No se ha subido ningún archivo" }, status: :bad_request
     end
 
-    results = ParsePdfInvoice.new(params[:pdf].tempfile).call
+    results = ParseInvoiceDocument.new(
+      params[:pdf].tempfile,
+      filename: params[:pdf].original_filename
+    ).call
 
     invoices = results.map do |result|
       data = result.to_h
@@ -142,9 +127,9 @@ class InvoicesController < ApplicationController
     payload = { invoices: invoices }
     if invoices.empty?
       payload[:extraction_note] =
-        "No se extrajo ninguna factura. Suele deberse a límites de cuota de las APIs de IA (error 429), " \
-        "a un PDF escaneado sin texto seleccionable o a un formato que aún no reconocemos. " \
-        "Prueba más tarde o comprueba las claves en credentials (Gemini / Groq)."
+        "No se extrajo ninguna factura. Suele deberse a límites de cuota de las APIs (429), " \
+        "a un PDF sin texto seleccionable, a una foto borrosa o con poca luz, o a un formato no soportado. " \
+        "Prueba más tarde o revisa las claves en credentials (Gemini / Groq)."
     end
 
     render json: payload
@@ -174,5 +159,25 @@ class InvoicesController < ApplicationController
       :issuer_name, :issuer_nif, :recipient_name, :recipient_nif, :notes,
       invoice_lines_attributes: %i[id iva_rate base_imponible _destroy]
     )
+  end
+
+  def build_pdf_upload_payload(file)
+    upload = CreatePdfUpload.new(user: current_user, file: file).call
+    {
+      id:       upload.id,
+      filename: upload.filename,
+      status:   upload.status,
+      html:     render_to_string(
+        partial: "invoices/pdf_upload_row",
+        locals:  { upload: upload },
+        layout:  false,
+        formats: [ :html ]
+      )
+    }
+  rescue ArgumentError => e
+    {
+      filename: file.original_filename,
+      error:    e.message
+    }
   end
 end

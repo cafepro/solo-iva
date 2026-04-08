@@ -20,7 +20,7 @@ class ProcessPdfUploadJob < ApplicationJob
 
     return unless PdfUpload.exists?(id: pdf_upload_id)
 
-    results = ParsePdfInvoice.new(StringIO.new(file_data)).call
+    results = ParseInvoiceDocument.new(StringIO.new(file_data), filename: upload.filename).call
 
     return unless PdfUpload.exists?(id: pdf_upload_id)
 
@@ -60,9 +60,9 @@ class ProcessPdfUploadJob < ApplicationJob
 
     if saved_count.zero?
       msg = if results.empty?
-        "No se pudo extraer ninguna factura del PDF. Suele deberse a cuota agotada de Gemini, PDF escaneado sin texto o un formato que aún no reconocemos."
+        "No se pudo extraer ninguna factura. Suele deberse a cuota de las APIs, a un PDF sin texto seleccionable o a una foto ilegible. Comprueba iluminación y encuadre."
       else
-        "Se detectaron datos en el PDF pero ninguna factura pudo guardarse (revisa duplicados o campos obligatorios)."
+        "Se detectaron datos pero ninguna factura pudo guardarse (revisa duplicados o campos obligatorios)."
       end
       upload.update!(status: :failed, error_message: msg)
     else
@@ -70,6 +70,12 @@ class ProcessPdfUploadJob < ApplicationJob
     end
 
     broadcast_update(upload)
+  rescue ParsePdfInvoice::ParseError => e
+    failed = PdfUpload.find_by(id: pdf_upload_id)
+    if failed
+      failed.update(status: :failed, error_message: e.message)
+      broadcast_update(failed)
+    end
   rescue => e
     failed = PdfUpload.find_by(id: pdf_upload_id)
     if failed

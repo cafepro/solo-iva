@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Manages the invoice form: PDF drag-and-drop upload, IVA line management.
+// Manages the invoice form: PDF or photo upload, IVA line management.
 export default class extends Controller {
   static targets = ["dropzone", "fileInput", "status", "linesContainer", "lineTemplate", "picker"]
   static values  = { uploadUrl: String, bulkCreateUrl: String, lineIndex: Number }
@@ -39,7 +39,7 @@ export default class extends Controller {
   }
 
   async uploadPdf(file) {
-    this.setStatus("Procesando PDF...")
+    this.setStatus("Procesando archivo…")
     this.removePicker()
 
     const formData = new FormData()
@@ -54,18 +54,18 @@ export default class extends Controller {
 
       const invoices = data.invoices || []
       if (invoices.length === 0) {
-        this.setStatus(data.extraction_note || "No se encontraron facturas en el PDF.")
+        this.setStatus(data.extraction_note || "No se encontraron facturas en el archivo.")
         return
       }
 
       if (invoices.length === 1) {
         this.loadInvoice(invoices[0])
       } else {
-        this.setStatus(`Se encontraron ${invoices.length} facturas en el PDF. Selecciona cuál importar:`)
+        this.setStatus(`Se encontraron ${invoices.length} facturas. Selecciona cuál importar:`)
         this.showPicker(invoices)
       }
     } catch {
-      this.setStatus("Error al procesar el PDF.")
+      this.setStatus("Error al procesar el archivo.")
     }
   }
 
@@ -159,7 +159,7 @@ export default class extends Controller {
     if (inv.duplicate) {
       this.setStatus("⚠️ Ya existe una factura con el número " + inv.invoice_number + ". Revisa que no sea un duplicado.", "warning")
     } else {
-      this.setStatus("PDF cargado correctamente. Revisa los datos antes de guardar.", "ok")
+      this.setStatus("Datos cargados. Revisa antes de guardar.", "ok")
     }
   }
 

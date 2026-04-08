@@ -13,10 +13,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
-      <p class="text-sm font-medium text-blue-700">Arrastra el PDF aquí o <span class="underline">selecciona un archivo</span></p>
-      <p class="text-xs text-blue-500">Rellenaremos los campos automáticamente. Podrás revisar antes de guardar.</p>
+      <p class="text-sm font-medium text-blue-700">Arrastra un PDF o una foto de la factura o <span class="underline">selecciona un archivo</span></p>
+      <p class="text-xs text-blue-500">Rellenaremos los campos automáticamente (JPG, PNG o WebP). Podrás revisar antes de guardar.</p>
       <span data-invoice-form-target="status" class="text-xs font-medium text-blue-700 hidden"></span>
-      <input type="file" accept=".pdf"
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
              data-invoice-form-target="fileInput"
              data-action="change->invoice-form#onFileChange"
              class="sr-only">

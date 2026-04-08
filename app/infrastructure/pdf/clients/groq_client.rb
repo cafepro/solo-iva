@@ -28,6 +28,19 @@ module Pdf
         connection.post("/openai/v1/chat/completions", body)
       end
 
+      # +messages+ must follow the OpenAI chat format (e.g. user content as array of text + image_url blocks).
+      def chat_completion_messages(messages, temperature: 0.1, max_tokens: 8192, response_format: nil)
+        body = {
+          model:       @model,
+          messages:    messages,
+          temperature: temperature,
+          max_tokens:  max_tokens
+        }
+        body[:response_format] = response_format if response_format
+
+        connection.post("/openai/v1/chat/completions", body)
+      end
+
       private
 
       def connection
