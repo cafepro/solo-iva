@@ -2,15 +2,27 @@ class ProcessPdfUploadJob < ApplicationJob
   queue_as :default
 
   def perform(pdf_upload_id)
-    upload = PdfUpload.find(pdf_upload_id)
+    upload = PdfUpload.find_by(id: pdf_upload_id)
+    return unless upload
+
+    file_data = upload.file_data
+    user      = upload.user
+
     upload.update!(status: :processing)
 
-    results = ParsePdfInvoice.new(StringIO.new(upload.file_data)).call
+    return unless PdfUpload.exists?(id: pdf_upload_id)
+
+    results = ParsePdfInvoice.new(StringIO.new(file_data)).call
+
+    return unless PdfUpload.exists?(id: pdf_upload_id)
+
+    upload = PdfUpload.find_by(id: pdf_upload_id)
+    return unless upload
 
     results.each do |result|
       next if result.invoice_number.blank? || result.lines.empty?
 
-      invoice = upload.user.invoices.build(
+      invoice = user.invoices.build(
         status:         :pending,
         invoice_type:   :recibida,
         invoice_number: result.invoice_number,
@@ -29,12 +41,18 @@ class ProcessPdfUploadJob < ApplicationJob
       invoice.save
     end
 
+    upload = PdfUpload.find_by(id: pdf_upload_id)
+    return unless upload
+
     upload.update!(status: :done)
 
     broadcast_update(upload)
   rescue => e
-    upload&.update(status: :failed, error_message: e.message)
-    broadcast_update(upload) if upload
+    failed = PdfUpload.find_by(id: pdf_upload_id)
+    if failed
+      failed.update(status: :failed, error_message: e.message)
+      broadcast_update(failed)
+    end
     raise
   end
 

@@ -19,6 +19,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :pdf_uploads, only: :destroy
+
     resources :reports, only: [] do
       collection do
         get :modelo303
