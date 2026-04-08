@@ -1,42 +1,99 @@
 # SoloIVA
 
-A simple invoice management app for Spanish freelancers (*autónomos*). Track issued and received invoices, calculate VAT (IVA), and generate quarterly tax reports (Modelo 303).
+Web application for **Spanish freelancers** (*autónomos*) who need a lightweight way to record **issued and received invoices**, track **VAT (IVA)** by line, and see a **quarterly summary aligned with Modelo 303** (Spain’s periodic VAT return). Data is **per user**; there is no multi-tenant billing layer—just your own invoice ledger and reports.
 
-## Features
+---
 
-- **Invoice management** — create, edit, and delete issued and received invoices with multiple VAT lines
-- **PDF import** — drag and drop a PDF invoice to auto-fill fields via AI parsing
-- **Modelo 303** — automatic quarterly VAT report based on your invoices
-- **Authentication** — secure per-user data via Devise
+## What it does
 
-## Tech stack
+- **Invoices** — Each invoice has a type (*emitida* / *recibida*), header fields (number, date, issuer NIF/name, etc.), and **multiple VAT lines** (rate + taxable base; IVA quota is derived).
+- **Import from files** — Upload a **PDF** or a **photo/scan** (JPEG, PNG, WebP). The app tries to extract structured invoice data using **Google Gemini** and **Groq** (with a **text heuristic fallback** for PDFs only). You can import from the **new invoice form** (immediate JSON response) or from the **review** page (background job, one file at a time per UX).
+- **Pending review** — Imports can create invoices in a **pending** state; you **confirm** or edit them before they count in accounting totals.
+- **Modelo 303 view** — For a chosen **calendar year and quarter**, the app aggregates **confirmed** invoice lines into totals useful for filling **Modelo 303** (issued vs received, by IVA rate). This is a **helper report**, not filed directly with the tax agency.
+- **Authentication** — **Devise**; each user only sees their own invoices and uploads.
 
-- Ruby on Rails 8
-- SQLite
-- Tailwind CSS (via CDN)
-- Devise for authentication
+---
+
+## User-facing flows (short)
+
+| Flow | Where | Behaviour |
+| --- | --- | --- |
+| Manual invoice | `Invoices` CRUD | Standard Rails forms; nested lines. |
+| Quick import (single file) | New/edit invoice — drop zone | `POST` upload → JSON with one or more extracted invoices → form prefill or bulk save. |
+| Batch import | Review page — drop zone | Each accepted file → `PdfUpload` + `ProcessPdfUploadJob` → Turbo Streams refresh queue and pending cards. |
+| Confirm pending | Review | Moves invoice from `pending` to `confirmed` (included in Modelo 303 and list filters). |
+
+Unsupported image formats (e.g. **HEIC** from some phones) are rejected with a clear message; users should export as **JPEG** or **PNG**.
+
+---
+
+## Technical architecture
+
+- **Framework** — Ruby on Rails **8.1**, **Hotwire** (Turbo + Stimulus), **importmap** (no Node bundler for JS).
+- **Database** — **PostgreSQL** with multiple DB configs: **primary** (app), **queue** (Solid Queue), **cable** (Solid Cable). Run `bin/rails db:prepare` (or `db:setup`) so all databases exist.
+- **Background jobs** — **Solid Queue** (`config/queue.yml`). PDF/image import jobs use a dedicated **`pdf_import`** queue with **limited concurrency** to avoid hammering external APIs. In **development**, Puma can run Solid Queue in **async** mode (see `config/puma.rb`).
+- **Real-time UI** — **Action Cable** + **Turbo Streams** for upload rows and pending-invoice panels on the review page.
+- **Domain / structure** — Use cases under `app/use_cases/`, PDF/vision clients under `app/infrastructure/pdf/`, small value objects under `app/domain/` (e.g. `Modelo303Report`, `QuarterCalculator`, `PdfExtractionResult`).
+- **Document parsing** — `ParseInvoiceDocument` branches on `InvoiceFileKind`: **PDF** → text extraction (`pdf-reader`) → Gemini → Groq → heuristics; **image** → **vision-only** (Gemini then Groq), no text heuristics on raw bytes.
+
+---
+
+## Requirements
+
+- Ruby **3.3+** (see `.ruby-version` if present)
+- **PostgreSQL** (9.5+)
+- Bundler
+
+---
 
 ## Getting started
 
 ```bash
 bundle install
-rails db:setup
-rails server
+bin/rails db:prepare   # creates primary, queue, and cable DBs where configured
+bin/rails server
 ```
 
-## AI keys (PDF invoice import)
+Open the app, sign up or sign in, then use **Dashboard**, **Invoices**, **Review**, and **Reports → Modelo 303** as needed.
 
-Parsing uploaded PDFs tries **Google Gemini** first, then **Groq** if Gemini returns no invoices, then heuristics on the extracted text.
+### Tests and lint
 
-Add both keys to encrypted credentials:
+```bash
+bundle exec rspec
+bundle exec rubocop
+```
+
+---
+
+## Configuration: AI keys
+
+Invoice extraction uses **Google Gemini** (Generative Language API) and **Groq** (OpenAI-compatible chat; **multimodal** for images).
+
+Add keys to **encrypted credentials**:
 
 ```bash
 bin/rails credentials:edit
 ```
 
-| Key | Purpose |
+| Credential | Purpose |
 | --- | --- |
-| `gemini_api_key` | [Google AI Studio](https://aistudio.google.com/apikey) — Generative Language API |
-| `groq_api_key` | [Groq Console](https://console.groq.com/keys) — OpenAI-compatible chat API |
+| `gemini_api_key` | [Google AI Studio](https://aistudio.google.com/apikey) |
+| `groq_api_key` | [Groq Console](https://console.groq.com/keys) |
 
-For local development you can also set `GROQ_API_KEY` in the environment; if present, it is used when credentials do not define `groq_api_key` (or the credentials method is missing).
+**Optional:** set `GROQ_API_KEY` in the environment for local dev; it is used when `groq_api_key` is missing from credentials.
+
+Without keys, PDF text extraction may still run, but **LLM steps are skipped** and results depend on **heuristics** (PDFs with poor or no text will often yield nothing). **Images** require vision APIs.
+
+---
+
+## Production notes
+
+- Set `SOLO_IVA_DATABASE_PASSWORD` (and any other `database.yml` env vars) for the **primary** DB; configure **cache**, **queue**, and **cable** databases as in `config/database.yml`.
+- Run Solid Queue workers in production (e.g. `bin/jobs` or your process manager) so `pdf_import` and `default` jobs execute.
+- The repo includes **Kamal** and **Thruster** in the Gemfile for container-style deploys; adjust to your hosting.
+
+---
+
+## Project name
+
+**SoloIVA** — *solo* (alone/simple) + **IVA** (VAT in Spanish). The product copy and tax concepts are Spain-specific; code and docs stay in **English** by convention.
