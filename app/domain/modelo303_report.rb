@@ -1,6 +1,12 @@
 # Value object representing a Modelo 303 quarterly VAT report.
 # Casillas alineadas con instrucciones AEAT ejercicio 2026 (régimen general simplificado en app).
 # Lines must respond to #iva_rate, #base_imponible, and #iva_amount.
+#
+# Las cuotas (devengado y deducible) se calculan como en el programa de la AEAT: base acumulada
+# por tipo impositivo × tipo / 100, redondeo a céntimos (medio arriba). No se suman las cuotas
+# almacenadas en cada línea, para evitar diferencias de céntimos frente al modelo en línea.
+require "bigdecimal"
+
 class Modelo303Report
   # Orden del formulario: 4 % → 01–03, 10 % → 04–06, 21 % → 07–09, 0 % → 150–152
   DEVENGADO_RATES = [
@@ -38,8 +44,8 @@ class Modelo303Report
     cuota_devengado_total = DEVENGADO_RATES.sum { |c| report[c[:cuota]] } + report[:casilla_152]
     cuota_devengado_total = cuota_devengado_total.round(2)
 
-    iva_deducible  = sum_iva(@received).round(2)
     base_deducible = sum_base(@received).round(2)
+    iva_deducible  = cuota_deducible_total.round(2)
 
     report[:casilla_27] = cuota_devengado_total
     report[:casilla_28] = base_deducible
@@ -56,7 +62,10 @@ class Modelo303Report
   end
 
   def cuota_devengada(rate)
-    lines_at_rate(@issued, rate).sum { |l| l.iva_amount.to_f }.round(2)
+    return 0.0 if rate.to_i.zero?
+
+    base = base_devengada(rate)
+    cuota_from_base_and_rate(base, rate)
   end
 
   def lines_at_rate(lines, rate)
@@ -67,7 +76,19 @@ class Modelo303Report
     lines.sum { |l| l.base_imponible.to_f }.round(2)
   end
 
-  def sum_iva(lines)
-    lines.sum { |l| l.iva_amount.to_f }.round(2)
+  # Cuota deducible total: por cada tipo impositivo, base agregada × tipo (misma lógica que devengado).
+  def cuota_deducible_total
+    @received.group_by { |l| l.iva_rate.to_i }.sum do |rate, lines|
+      base = lines.sum { |l| l.base_imponible.to_f }.round(2)
+      cuota_from_base_and_rate(base, rate)
+    end
+  end
+
+  def cuota_from_base_and_rate(base, rate)
+    return 0.0 if base.zero? || rate.to_i.zero?
+
+    b = BigDecimal(base.to_s).round(2, :half_up)
+    r = BigDecimal(rate.to_s)
+    (b * r / 100).round(2, :half_up).to_f
   end
 end

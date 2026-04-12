@@ -58,6 +58,23 @@ RSpec.describe Modelo303Report do
     end
   end
 
+  context "when line-level IVA sums differ from AEAT (base agregada × tipo)" do
+    let(:issued_lines) do
+      [
+        Modelo303Line.new(21, 712.80, 149.67),
+        Modelo303Line.new(21, 712.80, 149.67)
+      ]
+    end
+    let(:received_lines) { [] }
+
+    it "uses aggregated base for casilla 09 (299,38 como modelo en línea, no 299,34)" do
+      result = described_class.new(lines_issued: issued_lines, lines_received: received_lines).to_h
+      expect(result[:casilla_07]).to eq(1425.60)
+      expect(result[:casilla_09]).to eq(299.38)
+      expect(result[:casilla_27]).to eq(299.38)
+    end
+  end
+
   context "with 0 % issued lines" do
     let(:issued_lines) { [ Modelo303Line.new(0, 100.0, 0.0) ] }
     let(:received_lines) { [] }
