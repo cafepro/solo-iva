@@ -1,0 +1,15 @@
+<% content_for :title, "Nueva plantilla — SoloIVA" %>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Nueva plantilla de tarifa</h1>
+</div>
+
+<div class="bg-white rounded-lg border p-6">
+  <%= form_with model: @service_template, class: "space-y-6" do |f| %>
+    <%= render "form", f: f, service_template: @service_template %>
+    <div class="flex gap-3">
+      <%= f.submit "Guardar", class: "bg-blue-600 text-white px-5 py-2 rounded text-sm font-medium cursor-pointer" %>
+      <%= link_to "Cancelar", service_templates_path, class: "text-sm text-gray-500 hover:underline self-center" %>
+    </div>
+  <% end %>
+</div>

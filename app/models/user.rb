@@ -6,6 +6,7 @@ class User < ApplicationRecord
 
   has_many :invoices, dependent: :destroy
   has_many :clients, dependent: :destroy
+  has_many :service_templates, dependent: :destroy
   has_many :pdf_uploads, dependent: :destroy
   has_many :invoice_upload_stashes, dependent: :delete_all
 
@@ -36,8 +37,17 @@ class User < ApplicationRecord
     google_drive_received_folder_name.presence || "Recibidas"
   end
 
+  def google_drive_issued_invoices_folder_name
+    google_drive_issued_folder_name.presence || "Emitidas"
+  end
+
   # Segments before year/month, e.g. ["Facturas", "Recibidas"].
   def google_drive_received_invoice_path_prefix_segments
     [ google_drive_parent_folder_name, google_drive_received_invoices_folder_name ]
+  end
+
+  # e.g. ["Facturas", "Emitidas"]
+  def google_drive_issued_invoice_path_prefix_segments
+    [ google_drive_parent_folder_name, google_drive_issued_invoices_folder_name ]
   end
 end

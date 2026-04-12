@@ -1,0 +1,30 @@
+<%#
+  f: form builder
+  method: Symbol — atributo del modelo
+  label_text: String
+  id: String (opcional) — id del input; conviene fijarlo si JS lo referencia
+  label_class: String (opcional)
+  wrapper_class: String (opcional) — clases en el div exterior
+%>
+<% field_id = local_assigns[:id].presence || "#{f.object_name}_#{method}" %>
+<% lbl_class = local_assigns[:label_class].presence || "block text-sm font-medium text-gray-700 mb-1" %>
+<% wrap_class = local_assigns[:wrapper_class].presence %>
+<div class="<%= wrap_class %>" data-controller="date-picker">
+  <%= f.label method, label_text, class: lbl_class %>
+  <div class="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-500 bg-white">
+    <%= f.date_field method,
+        class: "flex-1 min-w-0 border-0 bg-transparent py-2 pl-3 pr-2 text-sm focus:ring-0 focus:outline-none",
+        id: field_id,
+        data: { date_picker_target: "field" } %>
+    <button type="button"
+            class="shrink-0 inline-flex items-center justify-center px-3 py-2 border-l border-gray-200 text-gray-500 hover:text-blue-600 hover:bg-gray-50 rounded-r-md transition-colors"
+            data-action="click->date-picker#open"
+            title="Abrir calendario"
+            aria-label="Abrir calendario">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+    </button>
+  </div>
+</div>

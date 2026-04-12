@@ -3,13 +3,14 @@
 <div class="mb-6">
   <h1 class="text-2xl font-bold text-gray-800">Google Drive</h1>
   <p class="text-sm text-gray-500 mt-1">
-    Las <strong>facturas recibidas</strong> confirmadas (o creadas ya confirmadas) se guardan bajo
-    <span class="font-mono text-gray-700">Mi unidad → [carpeta 1] → [carpeta 2] → año → mes</span>.
-    Por defecto: <span class="font-mono">Facturas → Recibidas → 2025 → 04</span>.
+    Las facturas <strong>recibidas</strong> y <strong>emitidas</strong> confirmadas se guardan bajo
+    <span class="font-mono text-gray-700">Mi unidad → [carpeta 1] → [subcarpeta] → año → mes</span>.
+    Recibidas por defecto: <span class="font-mono">Facturas → Recibidas</span>.
+    Emitidas: <span class="font-mono">Facturas → Emitidas</span> (misma carpeta raíz, otra subcarpeta).
   </p>
   <p class="text-sm text-gray-600 mt-2">
-    Si la factura viene del <strong>flujo de subida en Revisión</strong>, se sube el <strong>archivo original</strong> (PDF o imagen).
-    Si la creaste a mano o importaste solo los datos desde el formulario, se genera un <strong>PDF de resumen</strong>.
+    <strong>Recibidas:</strong> si vienen del flujo de <strong>Revisión</strong>, se sube el archivo original (PDF o imagen); si no, un PDF de resumen generado por la app.
+    <strong>Emitidas:</strong> siempre el PDF de factura generado por SoloIVA (el mismo que descargas).
   </p>
 </div>
 
@@ -49,9 +50,15 @@
           placeholder: "Recibidas",
           class: "w-full max-w-md border border-gray-300 rounded px-3 py-2 text-sm" %>
     </div>
+    <div>
+      <%= f.label :google_drive_issued_folder_name, "Subcarpeta para facturas emitidas", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :google_drive_issued_folder_name,
+          placeholder: "Emitidas",
+          class: "w-full max-w-md border border-gray-300 rounded px-3 py-2 text-sm" %>
+    </div>
     <div class="flex items-center gap-2">
       <%= f.check_box :google_drive_sync_enabled, class: "rounded border-gray-300" %>
-      <%= f.label :google_drive_sync_enabled, "Subir facturas recibidas automáticamente", class: "text-sm text-gray-700" %>
+      <%= f.label :google_drive_sync_enabled, "Subir facturas a Drive automáticamente (recibidas y emitidas)", class: "text-sm text-gray-700" %>
     </div>
     <div>
       <%= f.submit "Guardar preferencias", class: "px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 cursor-pointer" %>

@@ -76,13 +76,7 @@ class Invoice < ApplicationRecord
     c = user.clients.find_by(id: client_id)
     return unless c
 
-    self.recipient_name          = c.name
-    self.recipient_nif           = c.nif
-    self.recipient_address_line  = c.address_line
-    self.recipient_postal_code   = c.postal_code
-    self.recipient_city          = c.city
-    self.recipient_province      = c.province
-    self.recipient_country       = c.country.presence || "España"
+    assign_attributes(c.attributes_for_invoice_recipient)
   end
 
   def invoice_number_unique_among_confirmed

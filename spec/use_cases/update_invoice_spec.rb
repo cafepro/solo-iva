@@ -42,6 +42,19 @@ RSpec.describe UpdateInvoice do
       end
     end
 
+    context "when Google Drive is enabled and the issued invoice was never synced" do
+      let(:user) { create(:user, google_drive_refresh_token: "t", google_drive_sync_enabled: true) }
+      let(:invoice) { create(:invoice, user: user, invoice_type: :emitida) }
+
+      before { create(:invoice_line, invoice: invoice) }
+
+      it "enqueues issued PDF upload after a successful update" do
+        expect {
+          described_class.new(invoice: invoice, params: { notes: "touch" }).call
+        }.to have_enqueued_job(UploadIssuedInvoiceToDriveJob).with(invoice.id)
+      end
+    end
+
     context "with invalid params" do
       it "returns ok: false" do
         result = described_class.new(invoice: invoice, params: { invoice_number: "" }).call

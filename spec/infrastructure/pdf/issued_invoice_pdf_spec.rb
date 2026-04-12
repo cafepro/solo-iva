@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe IssuedInvoicePdf do
+RSpec.describe Pdf::IssuedInvoicePdf do
   it "renders a PDF for an emitida" do
     user = create(:user, email: "a@b.com", billing_phone: "+34 600 000 000")
     invoice = create(

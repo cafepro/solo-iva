@@ -25,5 +25,25 @@ RSpec.describe ConfirmInvoice do
       expect(pending.reload).to be_pending
       expect(result[:invoice].errors[:invoice_number]).to be_present
     end
+
+    it "enqueues Drive upload for a pending received invoice when confirmed" do
+      user = create(:user, google_drive_refresh_token: "t", google_drive_sync_enabled: true)
+      pending = create(:invoice, :pending, :recibida, user: user)
+      create(:invoice_line, invoice: pending, iva_rate: 21, base_imponible: 10)
+
+      expect {
+        described_class.new(invoice: pending.reload).call
+      }.to have_enqueued_job(UploadReceivedInvoiceToDriveJob).with(pending.id)
+    end
+
+    it "enqueues Drive upload for a pending issued invoice when confirmed" do
+      user = create(:user, google_drive_refresh_token: "t", google_drive_sync_enabled: true)
+      pending = create(:invoice, :pending, user: user, invoice_type: :emitida)
+      create(:invoice_line, invoice: pending, iva_rate: 21, base_imponible: 10)
+
+      expect {
+        described_class.new(invoice: pending.reload).call
+      }.to have_enqueued_job(UploadIssuedInvoiceToDriveJob).with(pending.id)
+    end
   end
 end

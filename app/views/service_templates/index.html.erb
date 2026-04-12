@@ -1,0 +1,42 @@
+<% content_for :title, "Plantillas de tarifa — SoloIVA" %>
+
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-800">Plantillas de tarifa</h1>
+  <%= link_to "+ Nueva plantilla", new_service_template_path, class: "text-sm px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" %>
+</div>
+
+<p class="text-sm text-gray-600 mb-4 max-w-2xl">
+  Úsalas al crear una <strong>factura emitida</strong>: rellenan periodo de servicio (según la fecha de factura), concepto, base e IVA en la primera línea.
+</p>
+
+<% if @service_templates.any? %>
+  <div class="bg-white rounded-lg border overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-3 text-left">Nombre</th>
+          <th class="px-4 py-3 text-left">Periodo</th>
+          <th class="px-4 py-3 text-left">IVA</th>
+          <th class="px-4 py-3 text-left">Base por defecto</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @service_templates.each do |t| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium"><%= t.name %></td>
+            <td class="px-4 py-3 text-gray-600"><%= t.billing_period_label %></td>
+            <td class="px-4 py-3 text-gray-600"><%= number_to_percentage(t.default_iva_rate, precision: 0, strip_insignificant_zeros: true) %></td>
+            <td class="px-4 py-3 text-gray-600"><%= t.default_base_imponible.present? ? number_to_currency(t.default_base_imponible, unit: "€", format: "%n %u") : "—" %></td>
+            <td class="px-4 py-3 text-right space-x-2">
+              <%= link_to "Editar", edit_service_template_path(t), class: "text-blue-600 hover:underline text-xs" %>
+              <%= button_to "Eliminar", service_template_path(t), method: :delete, data: { turbo_confirm: "¿Eliminar esta plantilla?" }, class: "text-red-500 hover:underline text-xs bg-transparent border-0 cursor-pointer inline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-gray-500">Aún no hay plantillas. <%= link_to "Crea la primera", new_service_template_path, class: "text-blue-600 hover:underline" %> para agilizar facturas recurrentes.</p>
+<% end %>

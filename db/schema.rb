@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,6 +92,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_190000) do
     t.index ["user_id"], name: "index_pdf_uploads_on_user_id"
   end
 
+  create_table "service_templates", force: :cascade do |t|
+    t.string "billing_period", default: "custom", null: false
+    t.decimal "default_base_imponible", precision: 10, scale: 2
+    t.string "default_description"
+    t.decimal "default_iva_rate", precision: 5, scale: 2, default: "21.0"
+    t.string "name", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_service_templates_on_user_id_and_name"
+    t.index ["user_id"], name: "index_service_templates_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "billing_address_line"
     t.string "billing_city"
@@ -106,6 +117,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_190000) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "google_drive_folder_name"
+    t.string "google_drive_issued_folder_name"
     t.string "google_drive_received_folder_name"
     t.text "google_drive_refresh_token"
     t.boolean "google_drive_sync_enabled", default: false, null: false
@@ -130,4 +142,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_190000) do
   add_foreign_key "invoices", "pdf_uploads"
   add_foreign_key "invoices", "users"
   add_foreign_key "pdf_uploads", "users"
+  add_foreign_key "service_templates", "users"
 end

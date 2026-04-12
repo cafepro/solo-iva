@@ -22,6 +22,8 @@ Rails.application.routes.draw do
 
     resources :clients, except: :show
 
+    resources :service_templates
+
     resource :billing_profile, only: %i[show update]
 
     resources :pdf_uploads, only: :destroy

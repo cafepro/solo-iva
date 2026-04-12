@@ -44,10 +44,15 @@ class CreateInvoice
   end
 
   def enqueue_drive_backup(invoice)
-    return unless invoice.recibida? && invoice.confirmed?
+    return unless invoice.confirmed?
     return if invoice.google_drive_file_id.present?
     return unless invoice.user.google_drive_ready?
+    return if invoice.invoice_lines.empty?
 
-    UploadReceivedInvoiceToDriveJob.perform_later(invoice.id)
+    if invoice.recibida?
+      UploadReceivedInvoiceToDriveJob.perform_later(invoice.id)
+    elsif invoice.emitida?
+      UploadIssuedInvoiceToDriveJob.perform_later(invoice.id)
+    end
   end
 end

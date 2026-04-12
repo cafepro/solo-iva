@@ -54,7 +54,7 @@ class GoogleDriveSettingsController < ApplicationController
       google_drive_refresh_token: refresh,
       google_drive_sync_enabled:  true
     )
-    redirect_to google_drive_settings_path, notice: "Google Drive conectado. Las facturas recibidas nuevas se copiarán en tu carpeta."
+    redirect_to google_drive_settings_path, notice: "Google Drive conectado. Las facturas recibidas y emitidas se podrán copiar a tu carpeta (según preferencias)."
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     redirect_to google_drive_settings_path, alert: "El enlace de autorización ha caducado. Vuelve a pulsar «Conectar con Google»."
   rescue GoogleDrive::Error => e
@@ -84,7 +84,8 @@ class GoogleDriveSettingsController < ApplicationController
     params.require(:user).permit(
       :google_drive_sync_enabled,
       :google_drive_folder_name,
-      :google_drive_received_folder_name
+      :google_drive_received_folder_name,
+      :google_drive_issued_folder_name
     )
   end
 end

@@ -53,6 +53,24 @@ RSpec.describe CreateInvoice do
       end
     end
 
+    context "with an issued invoice, lines and Google Drive enabled" do
+      before do
+        user.update!(google_drive_refresh_token: "t", google_drive_sync_enabled: true)
+      end
+
+      let(:emitida_params) do
+        valid_params.merge(
+          invoice_lines_attributes: { "0" => { iva_rate: 21, base_imponible: "50.0" } }
+        )
+      end
+
+      it "enqueues issued invoice PDF upload to Drive" do
+        expect {
+          described_class.new(user: user, params: emitida_params).call
+        }.to have_enqueued_job(UploadIssuedInvoiceToDriveJob).with(kind_of(Integer))
+      end
+    end
+
     context "with auto_invoice_number for emitida" do
       before do
         user.update!(

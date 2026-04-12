@@ -6,12 +6,16 @@ class AssignNextInvoiceNumber
   end
 
   def preview
+    # Tras un rollback (p. ej. factura inválida), el mismo objeto User puede seguir
+    # «dirty» en memoria; with_lock exige registro limpio respecto a la BD.
+    @user.reload
     @user.with_lock do
       format_number(@user.invoice_number_next)
     end
   end
 
   def consume!
+    @user.reload
     @user.with_lock do
       n = @user.invoice_number_next
       str = format_number(n)

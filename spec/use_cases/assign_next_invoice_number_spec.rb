@@ -15,6 +15,12 @@ RSpec.describe AssignNextInvoiceNumber do
       expect(described_class.new(user).preview).to eq("F2026015")
       expect(user.reload.invoice_number_next).to eq(15)
     end
+
+    it "usa el contador persistido aunque el usuario tenga cambios sin guardar en memoria" do
+      user.assign_attributes(invoice_number_next: 99)
+      expect(described_class.new(user).preview).to eq("F2026015")
+      expect(user.reload.invoice_number_next).to eq(15)
+    end
   end
 
   describe "#consume!" do

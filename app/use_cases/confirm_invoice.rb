@@ -16,10 +16,14 @@ class ConfirmInvoice
   private
 
   def enqueue_drive_backup
-    return unless @invoice.recibida?
     return if @invoice.google_drive_file_id.present?
     return unless @invoice.user.google_drive_ready?
+    return if @invoice.invoice_lines.empty?
 
-    UploadReceivedInvoiceToDriveJob.perform_later(@invoice.id)
+    if @invoice.recibida?
+      UploadReceivedInvoiceToDriveJob.perform_later(@invoice.id)
+    elsif @invoice.emitida?
+      UploadIssuedInvoiceToDriveJob.perform_later(@invoice.id)
+    end
   end
 end

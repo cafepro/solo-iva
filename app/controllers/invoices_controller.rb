@@ -69,7 +69,7 @@ class InvoicesController < ApplicationController
       return
     end
 
-    pdf_io = IssuedInvoicePdf.render(@invoice)
+    pdf_io = Pdf::IssuedInvoicePdf.render(@invoice)
     send_data pdf_io.read,
               filename:     "#{@invoice.invoice_number.presence || 'factura'}.pdf",
               type:         "application/pdf",
@@ -84,13 +84,13 @@ class InvoicesController < ApplicationController
       @invoice.invoice_number = @suggested_invoice_number
     end
     @invoice.invoice_lines.build
-    @clients = current_user.clients.order(:name)
+    load_invoice_form_collections
   end
 
   def edit
     @invoice.invoice_lines.build if @invoice.invoice_lines.empty?
-    @clients = current_user.clients.order(:name)
-    @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview
+    load_invoice_form_collections
+    @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview if @invoice.emitida?
   end
 
   def create
@@ -107,8 +107,8 @@ class InvoicesController < ApplicationController
     if result[:ok]
       redirect_to invoices_path, notice: "Factura guardada correctamente."
     else
-      @clients = current_user.clients.order(:name)
-      @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview
+      load_invoice_form_collections
+      @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview if @invoice.emitida?
       render :new, status: :unprocessable_entity
     end
   end
@@ -129,7 +129,7 @@ class InvoicesController < ApplicationController
       path = @invoice.pending? ? review_invoices_path : invoices_path
       redirect_to path, notice: notice
     else
-      @clients = current_user.clients.order(:name)
+      load_invoice_form_collections
       @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview if @invoice.emitida?
       render :edit, status: :unprocessable_entity
     end
@@ -213,6 +213,14 @@ class InvoicesController < ApplicationController
   end
 
   private
+
+  def load_invoice_form_collections
+    @clients = current_user.clients.order(:name)
+    @service_templates = current_user.service_templates.order(:name)
+    @clients_snapshot_json = @clients.each_with_object({}) do |c, h|
+      h[c.id.to_s] = c.attributes_for_invoice_recipient.transform_keys(&:to_s)
+    end.to_json
+  end
 
   def parse_period_params
     y = params[:year].presence&.to_i

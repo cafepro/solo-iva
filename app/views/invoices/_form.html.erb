@@ -2,7 +2,9 @@
      data-controller="invoice-form invoice-emitida"
      data-invoice-form-upload-url-value="<%= upload_pdf_invoices_path %>"
      data-invoice-form-bulk-create-url-value="<%= bulk_create_invoices_path %>"
-     data-invoice-form-line-index-value="<%= invoice.invoice_lines.size %>">
+     data-invoice-form-line-index-value="<%= invoice.invoice_lines.size %>"
+     data-invoice-emitida-service-templates-base-value="<%= service_templates_path %>"
+     data-invoice-emitida-clients-snapshot-value="<%= ERB::Util.html_escape(@clients_snapshot_json.presence || "{}") %>">
 
   <%# PDF UPLOAD (oculto en emitidas: se genera la factura en la app) %>
   <div class="mb-6" data-invoice-emitida-target="emitidaUpload">
@@ -47,8 +49,11 @@
 
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :invoice_date, "Fecha", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.date_field :invoice_date, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_invoice_date" %>
+        <%= render "shared/date_field_with_picker",
+              f: f,
+              method: :invoice_date,
+              label_text: "Fecha",
+              id: "invoice_invoice_date" %>
       </div>
     </div>
 
@@ -71,7 +76,9 @@
                 :id,
                 :name,
                 { include_blank: "Sin cliente (rellenar receptor a mano)" },
-                class: "w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white" %>
+                class: "w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white",
+                id: "invoice_client_id",
+                data: { action: "change->invoice-emitida#clientChanged" } %>
         </div>
         <%= link_to "Nuevo cliente", new_client_path, class: "text-sm text-blue-600 hover:underline pb-2" %>
         <%= link_to "Datos de facturación (emisor, IBAN…)", billing_profile_path, class: "text-sm text-gray-600 hover:underline pb-2" %>
@@ -79,23 +86,50 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <%= f.label :service_period_start, "Periodo servicio — inicio", class: "block text-xs font-medium text-gray-600 mb-1" %>
-          <%= f.date_field :service_period_start, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white", id: "invoice_service_period_start" %>
+          <%= render "shared/date_field_with_picker",
+                f: f,
+                method: :service_period_start,
+                label_text: "Periodo servicio — inicio",
+                id: "invoice_service_period_start",
+                label_class: "block text-xs font-medium text-gray-600 mb-1" %>
         </div>
         <div>
-          <%= f.label :service_period_end, "Periodo servicio — fin", class: "block text-xs font-medium text-gray-600 mb-1" %>
-          <%= f.date_field :service_period_end, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white", id: "invoice_service_period_end" %>
+          <%= render "shared/date_field_with_picker",
+                f: f,
+                method: :service_period_end,
+                label_text: "Periodo servicio — fin",
+                id: "invoice_service_period_end",
+                label_class: "block text-xs font-medium text-gray-600 mb-1" %>
         </div>
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Rellenar periodo según fecha de factura</label>
-        <select class="w-full sm:w-64 border border-gray-300 rounded px-3 py-2 text-sm bg-white"
-                data-action="change->invoice-emitida#setPeriodPreset">
-          <option value="">Elegir…</option>
-          <option value="day">Un día (solo la fecha de factura)</option>
-          <option value="week">Semana natural (lun–dom)</option>
-          <option value="month">Mes natural de la fecha</option>
-        </select>
+      <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-end">
+        <div class="flex-1 min-w-[12rem]">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Plantilla de tarifa</label>
+          <% if (@service_templates || []).any? %>
+            <select id="invoice_service_template_picker"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                    data-action="change->invoice-emitida#applyServiceTemplate">
+              <option value="">Elegir plantilla…</option>
+              <% @service_templates.each do |tpl| %>
+                <option value="<%= tpl.id %>"><%= tpl.name %></option>
+              <% end %>
+            </select>
+          <% else %>
+            <p class="text-xs text-gray-500 py-2">
+              <%= link_to "Crea plantillas", service_templates_path, class: "text-blue-600 hover:underline" %> para rellenar periodo, concepto e importes de un clic.
+            </p>
+          <% end %>
+        </div>
+        <div class="flex-1 min-w-[12rem]">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Rellenar solo periodo (fecha de factura)</label>
+          <select class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                  data-action="change->invoice-emitida#setPeriodPreset">
+            <option value="">Elegir…</option>
+            <option value="day">Un día (solo la fecha de factura)</option>
+            <option value="week">Semana natural (lun–dom)</option>
+            <option value="month">Mes natural de la fecha</option>
+          </select>
+        </div>
       </div>
 
       <div>
@@ -120,25 +154,25 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <%= f.label :recipient_name, "Receptor (nombre / empresa)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.text_field :recipient_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        <%= f.text_field :recipient_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_recipient_name" %>
       </div>
       <div>
         <%= f.label :recipient_nif, "NIF / CIF del receptor", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.text_field :recipient_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        <%= f.text_field :recipient_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", id: "invoice_recipient_nif" %>
       </div>
     </div>
 
     <div class="hidden space-y-3 border border-gray-100 rounded-lg p-4 bg-gray-50/50" data-invoice-emitida-target="emitidaSection">
       <p class="text-xs font-medium text-gray-600">Dirección del cliente (en factura y PDF)</p>
       <div class="grid grid-cols-1 gap-3">
-        <%= f.text_field :recipient_address_line, placeholder: "Calle y número", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        <%= f.text_field :recipient_address_line, placeholder: "Calle y número", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm", id: "invoice_recipient_address_line" %>
         <div class="grid grid-cols-2 gap-3">
-          <%= f.text_field :recipient_postal_code, placeholder: "C.P.", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
-          <%= f.text_field :recipient_city, placeholder: "Ciudad", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          <%= f.text_field :recipient_postal_code, placeholder: "C.P.", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm", id: "invoice_recipient_postal_code" %>
+          <%= f.text_field :recipient_city, placeholder: "Ciudad", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm", id: "invoice_recipient_city" %>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <%= f.text_field :recipient_province, placeholder: "Provincia", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
-          <%= f.text_field :recipient_country, placeholder: "País", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          <%= f.text_field :recipient_province, placeholder: "Provincia", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm", id: "invoice_recipient_province" %>
+          <%= f.text_field :recipient_country, placeholder: "País", class: "w-full border border-gray-300 rounded px-3 py-2 text-sm", id: "invoice_recipient_country" %>
         </div>
       </div>
     </div>
