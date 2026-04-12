@@ -21,9 +21,10 @@ RSpec.describe CalculateModelo303 do
         create(:invoice_line, invoice: received, iva_rate: 21, base_imponible: 400.0,  iva_amount: 84.0)
       end
 
-      it "calculates IVA devengado from issued invoices" do
+      it "calculates IVA devengado from issued invoices (casilla 09 al 21 %)" do
         result = use_case.call.to_h
-        expect(result[:casilla_02]).to eq(210.0)
+        expect(result[:casilla_09]).to eq(210.0)
+        expect(result[:casilla_27]).to eq(210.0)
       end
 
       it "calculates IVA deducible from received invoices" do
@@ -45,7 +46,7 @@ RSpec.describe CalculateModelo303 do
 
       it "excludes them from the report" do
         result = use_case.call.to_h
-        expect(result[:casilla_02]).to eq(0.0)
+        expect(result[:casilla_09]).to eq(0.0)
       end
     end
   end

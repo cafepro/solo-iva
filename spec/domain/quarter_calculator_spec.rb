@@ -39,6 +39,20 @@ RSpec.describe QuarterCalculator do
     end
   end
 
+  describe ".last_complete_quarter_for" do
+    it "en Q1 devuelve T4 del año anterior" do
+      expect(described_class.last_complete_quarter_for(Date.new(2026, 2, 10))).to eq([ 2025, 4 ])
+    end
+
+    it "el 1 de abril devuelve T1 del mismo año" do
+      expect(described_class.last_complete_quarter_for(Date.new(2026, 4, 1))).to eq([ 2026, 1 ])
+    end
+
+    it "en Q3 devuelve T2 del mismo año" do
+      expect(described_class.last_complete_quarter_for(Date.new(2026, 8, 1))).to eq([ 2026, 2 ])
+    end
+  end
+
   describe ".date_range_for_year_quarter" do
     it "returns first and last day of the calendar quarter" do
       start_date, end_date = described_class.date_range_for_year_quarter(2025, 1)

@@ -1,8 +1,13 @@
 # Value object representing a Modelo 303 quarterly VAT report.
-# Accepts plain line structs — no ActiveRecord dependency.
+# Casillas alineadas con instrucciones AEAT ejercicio 2026 (régimen general simplificado en app).
 # Lines must respond to #iva_rate, #base_imponible, and #iva_amount.
 class Modelo303Report
-  SUPPORTED_RATES = [ 21, 10, 4 ].freeze
+  # Orden del formulario: 4 % → 01–03, 10 % → 04–06, 21 % → 07–09, 0 % → 150–152
+  DEVENGADO_RATES = [
+    { rate: 4,  base: :casilla_01, cuota: :casilla_03 },
+    { rate: 10, base: :casilla_04, cuota: :casilla_06 },
+    { rate: 21, base: :casilla_07, cuota: :casilla_09 }
+  ].freeze
 
   attr_reader :casillas
 
@@ -21,22 +26,27 @@ class Modelo303Report
   def build_casillas
     report = {}
 
-    SUPPORTED_RATES.each_with_index do |rate, i|
-      base_key  = "casilla_#{format('%02d', (i * 2) + 1)}".to_sym
-      quota_key = "casilla_#{format('%02d', (i * 2) + 2)}".to_sym
-      report[base_key]  = base_devengada(rate)
-      report[quota_key] = cuota_devengada(rate)
+    DEVENGADO_RATES.each do |cfg|
+      r = cfg[:rate]
+      report[cfg[:base]]  = base_devengada(r)
+      report[cfg[:cuota]] = cuota_devengada(r)
     end
 
-    iva_devengado  = report.values_at(:casilla_02, :casilla_04, :casilla_06).sum.round(2)
-    iva_deducible  = sum_iva(@received)
-    base_deducible = sum_base(@received)
+    report[:casilla_150] = base_devengada(0)
+    report[:casilla_152] = cuota_devengada(0)
 
-    report[:casilla_46] = iva_devengado
+    cuota_devengado_total = DEVENGADO_RATES.sum { |c| report[c[:cuota]] } + report[:casilla_152]
+    cuota_devengado_total = cuota_devengado_total.round(2)
+
+    iva_deducible  = sum_iva(@received).round(2)
+    base_deducible = sum_base(@received).round(2)
+
+    report[:casilla_27] = cuota_devengado_total
     report[:casilla_28] = base_deducible
     report[:casilla_29] = iva_deducible
-    report[:casilla_47] = iva_deducible
-    report[:casilla_64] = (iva_devengado - iva_deducible).round(2)
+    report[:casilla_45] = iva_deducible
+    report[:casilla_46] = (cuota_devengado_total - iva_deducible).round(2)
+    report[:casilla_64] = report[:casilla_46]
 
     report
   end

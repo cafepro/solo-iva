@@ -14,15 +14,15 @@
 
 <div class="grid grid-cols-3 gap-4 mb-8">
   <div class="bg-white rounded-lg border p-5">
-    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Devengado</p>
-    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_46], unit: "€", separator: ",", delimiter: ".") %></p>
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA devengado <span class="text-gray-400 font-normal normal-case">(cas. 27)</span></p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_27], unit: "€", separator: ",", delimiter: ".") %></p>
   </div>
   <div class="bg-white rounded-lg border p-5">
-    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA Deducible</p>
-    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_47], unit: "€", separator: ",", delimiter: ".") %></p>
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IVA deducible <span class="text-gray-400 font-normal normal-case">(cas. 45)</span></p>
+    <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@report[:casilla_45], unit: "€", separator: ",", delimiter: ".") %></p>
   </div>
   <div class="bg-white rounded-lg border p-5 <%= @report[:casilla_64] >= 0 ? 'border-red-200' : 'border-green-200' %>">
-    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Resultado (casilla 64)</p>
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Resultado <span class="text-gray-400 font-normal normal-case">(cas. 64)</span></p>
     <p class="text-2xl font-bold <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
       <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
       <span class="text-sm font-normal"><%= @report[:casilla_64] >= 0 ? "a ingresar" : "a devolver" %></span>
