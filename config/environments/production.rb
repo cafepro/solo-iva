@@ -68,4 +68,13 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Full URLs for mailers / OAuth callback hints when generating outside a request.
+  if ENV["APP_HOST"].present?
+    config.action_controller.default_url_options = {
+      host:     ENV.fetch("APP_HOST"),
+      protocol: ENV.fetch("APP_PROTOCOL", "https")
+    }
+    config.action_controller.default_url_options[:port] = ENV["APP_PORT"].to_i if ENV["APP_PORT"].present?
+  end
 end

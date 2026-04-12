@@ -73,7 +73,10 @@ class InvoicesController < ApplicationController
   end
 
   def create
-    result = CreateInvoice.new(user: current_user, params: invoice_params).call
+    permitted = invoice_params
+    stash     = permitted[:source_stash_token]
+    permitted = permitted.except(:source_stash_token)
+    result = CreateInvoice.new(user: current_user, params: permitted, source_stash_token: stash).call
     @invoice = result[:invoice]
 
     if result[:ok]
@@ -84,7 +87,10 @@ class InvoicesController < ApplicationController
   end
 
   def update
-    result = UpdateInvoice.new(invoice: @invoice, params: invoice_params).call
+    permitted = invoice_params
+    stash     = permitted[:source_stash_token]
+    permitted = permitted.except(:source_stash_token)
+    result = UpdateInvoice.new(invoice: @invoice, params: permitted, source_stash_token: stash).call
     @invoice = result[:invoice]
 
     if result[:ok]
@@ -124,7 +130,12 @@ class InvoicesController < ApplicationController
       )
     end
 
-    result = BulkCreateInvoices.new(user: current_user, invoices_params: invoices_params).call
+    stash = params[:source_stash_token].presence
+    result = BulkCreateInvoices.new(
+      user:                current_user,
+      invoices_params:     invoices_params,
+      source_stash_token:  stash
+    ).call
 
     render json: {
       saved:   result.saved.map { |i| { id: i.id, invoice_number: i.invoice_number } },
@@ -137,10 +148,19 @@ class InvoicesController < ApplicationController
       return render json: { error: "No se ha subido ningún archivo" }, status: :bad_request
     end
 
+    uploaded = params[:pdf]
+    raw      = uploaded.read.to_s.b
+
     results = ParseInvoiceDocument.new(
-      params[:pdf].tempfile,
-      filename: params[:pdf].original_filename
+      StringIO.new(raw),
+      filename: uploaded.original_filename
     ).call
+
+    stash_token = InvoiceUploadStash.store!(
+      user:      current_user,
+      file_data: raw,
+      filename:  uploaded.original_filename
+    )
 
     invoices = results.map do |result|
       data = result.to_h
@@ -150,7 +170,7 @@ class InvoicesController < ApplicationController
       data
     end
 
-    payload = { invoices: invoices }
+    payload = { invoices: invoices, source_stash_token: stash_token }
     if invoices.empty?
       payload[:extraction_note] =
         "No se extrajo ninguna factura. Suele deberse a límites de cuota de las APIs (429), " \
@@ -183,6 +203,7 @@ class InvoicesController < ApplicationController
     params.require(:invoice).permit(
       :invoice_type, :invoice_number, :invoice_date,
       :issuer_name, :issuer_nif, :recipient_name, :recipient_nif, :notes,
+      :source_stash_token,
       invoice_lines_attributes: %i[id iva_rate base_imponible _destroy]
     )
   end

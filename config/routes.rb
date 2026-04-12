@@ -26,6 +26,12 @@ Rails.application.routes.draw do
         get :modelo303
       end
     end
+
+    resource :google_drive_settings, only: %i[show update], controller: "google_drive_settings" do
+      get :authorize, on: :collection
+      get :callback, on: :collection
+      delete :disconnect, on: :collection
+    end
   end
 
   # Redirect unauthenticated users to login

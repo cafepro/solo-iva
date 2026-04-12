@@ -52,6 +52,8 @@ export default class extends Controller {
 
       if (data.error) { this.setStatus("Error: " + data.error); return }
 
+      this.setSourceStashToken(data.source_stash_token)
+
       const invoices = data.invoices || []
       if (invoices.length === 0) {
         this.setStatus(data.extraction_note || "No se encontraron facturas en el archivo.")
@@ -128,12 +130,19 @@ export default class extends Controller {
           "Content-Type": "application/json",
           "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({ invoices: invoicesData })
+        body: JSON.stringify({
+          invoices: invoicesData,
+          source_stash_token: this.sourceStashTokenValue()
+        })
       })
       const data = await resp.json()
 
       const savedCount   = data.saved?.length   || 0
       const skippedCount = data.skipped?.length || 0
+
+      if (savedCount > 0) {
+        this.setSourceStashToken("")
+      }
 
       if (skippedCount > 0) {
         this.setStatus(`${savedCount} factura(s) guardadas. ${skippedCount} no pudieron guardarse (revisa duplicados).`, "warning")
@@ -225,6 +234,16 @@ export default class extends Controller {
   }
 
   // --- Helpers ---
+
+  setSourceStashToken(token) {
+    const el = document.getElementById("invoice_source_stash_token")
+    if (el) el.value = token || ""
+  }
+
+  sourceStashTokenValue() {
+    const el = document.getElementById("invoice_source_stash_token")
+    return el?.value || null
+  }
 
   setStatus(text, type = "ok") {
     const el = this.statusTarget

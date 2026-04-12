@@ -21,6 +21,7 @@
           <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
           <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
           <%= link_to "Modelo 303", modelo303_reports_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
+          <%= link_to "Google Drive", google_drive_settings_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
         </div>
         <div class="flex items-center gap-4 text-sm text-gray-500">
           <span><%= current_user.email %></span>

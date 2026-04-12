@@ -25,6 +25,34 @@ RSpec.describe BulkCreateInvoices do
       }.to change(Invoice, :count).by(2)
     end
 
+    context "with a source stash token" do
+      let(:stash_token) do
+        InvoiceUploadStash.store!(user: user, file_data: "PDF".b, filename: "batch.pdf")
+      end
+
+      it "attaches the same file to each saved invoice and deletes the stash once" do
+        result = described_class.new(
+          user:                user,
+          invoices_params:     valid_params,
+          source_stash_token:    stash_token
+        ).call
+
+        expect(result.saved.length).to eq(2)
+        expect(result.saved.map { |i| i.reload.source_filename }.uniq).to eq([ "batch.pdf" ])
+        expect(result.saved.map { |i| i.source_file_data }.uniq).to eq([ "PDF".b ])
+        expect(InvoiceUploadStash.where(token: stash_token)).not_to exist
+      end
+
+      it "keeps the stash when nothing was saved" do
+        bad = [ { invoice_type: "recibida", invoice_number: "", invoice_date: Date.today } ]
+        described_class.new(
+          user: user, invoices_params: bad, source_stash_token: stash_token
+        ).call
+
+        expect(InvoiceUploadStash.where(token: stash_token)).to exist
+      end
+    end
+
     context "when one invoice is invalid" do
       let(:mixed_params) do
         valid_params + [ { invoice_type: "recibida", invoice_number: "", invoice_date: Date.today } ]

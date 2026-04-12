@@ -24,6 +24,7 @@
   </div>
 
   <%= form_with model: invoice, class: "space-y-5" do |f| %>
+    <input type="hidden" name="invoice[source_stash_token]" id="invoice_source_stash_token" value="" autocomplete="off">
     <%= render "shared/errors", object: invoice %>
 
     <div class="grid grid-cols-2 gap-4">

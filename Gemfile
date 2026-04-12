@@ -24,6 +24,13 @@ gem "pdf-reader"
 # HTTP client for Gemini API fallback
 gem "faraday"
 
+# Google Drive backup for received invoices (OAuth + upload)
+gem "google-apis-drive_v3"
+gem "googleauth"
+gem "prawn"
+gem "prawn-table"
+gem "matrix" # Ruby 3.1+ default gem; required by prawn
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 

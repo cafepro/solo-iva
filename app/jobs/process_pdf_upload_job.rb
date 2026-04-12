@@ -39,13 +39,18 @@ class ProcessPdfUploadJob < ApplicationJob
         next
       end
 
+      # Keep a copy of the uploaded bytes on the invoice so Drive (and audits) still have the
+      # original after the user removes the queue row (PdfUpload#destroy nullifies pdf_upload_id).
       invoice = user.invoices.build(
-        status:         :pending,
-        invoice_type:   :recibida,
-        invoice_number: result.invoice_number,
-        invoice_date:   result.invoice_date,
-        issuer_name:    result.issuer_name,
-        issuer_nif:     result.issuer_nif
+        status:           :pending,
+        invoice_type:     :recibida,
+        invoice_number:   result.invoice_number,
+        invoice_date:     result.invoice_date,
+        issuer_name:      result.issuer_name,
+        issuer_nif:       result.issuer_nif,
+        pdf_upload:       upload,
+        source_file_data: file_data,
+        source_filename:  upload.filename
       )
 
       result.lines.each do |line|

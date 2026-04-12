@@ -40,6 +40,23 @@
   <% end %>
 </div>
 
+<%# Solo mostramos el aviso de Drive si aún no han conectado OAuth; la configuración sigue en el menú. %>
+<% if current_user.google_drive_refresh_token.blank? %>
+  <div class="mb-8 rounded-lg border border-gray-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <p class="text-sm font-semibold text-gray-800">Copia en Google Drive</p>
+      <p class="text-xs text-gray-500 mt-1">
+        Las recibidas pueden copiarse a Drive (Facturas → Recibidas → año → mes). Con subida desde Revisión se guarda el archivo original; si no, un PDF resumen.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+      <span class="text-xs text-amber-700 self-center">Sin conectar</span>
+      <%= link_to "Configurar Google Drive", google_drive_settings_path,
+          class: "inline-flex items-center px-3 py-1.5 rounded bg-gray-800 text-white text-sm font-medium hover:bg-gray-900" %>
+    </div>
+  </div>
+<% end %>
+
 <% if @recent_invoices.any? %>
   <h2 class="text-lg font-semibold text-gray-700 mb-3">Últimas facturas</h2>
   <div class="bg-white rounded-lg border overflow-hidden">

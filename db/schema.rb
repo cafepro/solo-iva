@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,19 +24,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
     t.index ["invoice_id"], name: "index_invoice_lines_on_invoice_id"
   end
 
+  create_table "invoice_upload_stashes", force: :cascade do |t|
+    t.binary "file_data", null: false
+    t.string "filename", null: false
+    t.string "token", null: false
+    t.bigint "user_id", null: false
+    t.index ["token"], name: "index_invoice_upload_stashes_on_token", unique: true
+    t.index ["user_id"], name: "index_invoice_upload_stashes_on_user_id"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "google_drive_file_id"
+    t.datetime "google_drive_synced_at"
     t.date "invoice_date"
     t.string "invoice_number"
     t.integer "invoice_type"
     t.string "issuer_name"
     t.string "issuer_nif"
     t.text "notes"
+    t.bigint "pdf_upload_id"
     t.string "recipient_name"
     t.string "recipient_nif"
+    t.binary "source_file_data"
+    t.string "source_filename"
     t.string "status", default: "confirmed", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["pdf_upload_id"], name: "index_invoices_on_pdf_upload_id"
     t.index ["status"], name: "index_invoices_on_status"
     t.index ["user_id", "invoice_type", "invoice_number"], name: "index_invoices_confirmed_user_type_number", unique: true, where: "((status)::text = 'confirmed'::text)"
     t.index ["user_id"], name: "index_invoices_on_user_id"
@@ -57,6 +72,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
+    t.string "google_drive_folder_name"
+    t.string "google_drive_received_folder_name"
+    t.text "google_drive_refresh_token"
+    t.boolean "google_drive_sync_enabled", default: false, null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
@@ -66,6 +85,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
   end
 
   add_foreign_key "invoice_lines", "invoices"
+  add_foreign_key "invoice_upload_stashes", "users"
+  add_foreign_key "invoices", "pdf_uploads"
   add_foreign_key "invoices", "users"
   add_foreign_key "pdf_uploads", "users"
 end

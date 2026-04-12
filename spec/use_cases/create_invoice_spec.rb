@@ -34,6 +34,59 @@ RSpec.describe CreateInvoice do
       end
     end
 
+    context "with a received invoice and Google Drive enabled" do
+      before do
+        user.update!(google_drive_refresh_token: "t", google_drive_sync_enabled: true)
+      end
+
+      let(:recibida_params) do
+        valid_params.merge(
+          invoice_type: "recibida",
+          invoice_lines_attributes: { "0" => { iva_rate: 21, base_imponible: "100.0" } }
+        )
+      end
+
+      it "enqueues Drive backup" do
+        expect {
+          described_class.new(user: user, params: recibida_params).call
+        }.to have_enqueued_job(UploadReceivedInvoiceToDriveJob).with(kind_of(Integer))
+      end
+    end
+
+    context "with a source stash token" do
+      let(:stash_token) do
+        InvoiceUploadStash.store!(user: user, file_data: "%PDF-1".b, filename: "orig.pdf")
+      end
+
+      let(:recibida_with_lines) do
+        valid_params.merge(
+          invoice_type: "recibida",
+          invoice_lines_attributes: { "0" => { iva_rate: 21, base_imponible: "100.0" } }
+        )
+      end
+
+      it "copies the stashed file onto the invoice and deletes the stash" do
+        result = described_class.new(
+          user: user, params: recibida_with_lines, source_stash_token: stash_token
+        ).call
+
+        expect(result[:ok]).to be true
+        inv = result[:invoice].reload
+        expect(inv.source_filename).to eq("orig.pdf")
+        expect(inv.source_file_data).to eq("%PDF-1".b)
+        expect(InvoiceUploadStash.where(token: stash_token)).not_to exist
+      end
+
+      it "does not delete the stash when save fails" do
+        result = described_class.new(
+          user: user, params: { invoice_type: "emitida" }, source_stash_token: stash_token
+        ).call
+
+        expect(result[:ok]).to be false
+        expect(InvoiceUploadStash.where(token: stash_token)).to exist
+      end
+    end
+
     context "with missing required fields" do
       let(:invalid_params) { { invoice_type: "emitida" } }
 
