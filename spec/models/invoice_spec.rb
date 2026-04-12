@@ -3,7 +3,30 @@ require "rails_helper"
 RSpec.describe Invoice, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:user) }
+    it { is_expected.to belong_to(:client).optional }
     it { is_expected.to have_many(:invoice_lines).dependent(:destroy) }
+  end
+
+  describe "client snapshot for emitidas" do
+    it "copies client address into recipient fields before save" do
+      user   = create(:user)
+      client = create(:client, user: user, name: "ACME", city: "Gijón", postal_code: "33203")
+      invoice = build(
+        :invoice,
+        user:           user,
+        invoice_type:   :emitida,
+        client:         client,
+        invoice_number: "X-1",
+        invoice_date:   Date.current,
+        issuer_name:    "Yo",
+        issuer_nif:     "12345678Z"
+      )
+      invoice.invoice_lines.build(iva_rate: 21, base_imponible: 100)
+      expect(invoice.save).to be true
+      expect(invoice.recipient_name).to eq("ACME")
+      expect(invoice.recipient_city).to eq("Gijón")
+      expect(invoice.recipient_postal_code).to eq("33203")
+    end
   end
 
   describe "validations" do

@@ -1,0 +1,104 @@
+<% content_for :title, "Datos de facturación — SoloIVA" %>
+<%# Evita que Turbo muestre una instantánea antigua de esta página al volver con el avance/retro del navegador. %>
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Datos de facturación</h1>
+  <p class="text-sm text-gray-500 mt-1">Se usan como emisor en facturas emitidas y en el PDF. El correo de la cuenta sigue siendo <%= @user.email %> si no indicas otro de contacto.</p>
+</div>
+
+<div class="bg-white rounded-lg border p-6 max-w-2xl">
+  <%# turbo: false = envío clásico (recarga completa); si no, Turbo a veces restaura el formulario vacío desde caché. %>
+  <%= form_with model: @user, url: billing_profile_path, method: :patch, class: "space-y-8", data: { turbo: false } do |f| %>
+    <%= render "shared/errors", object: @user %>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-800 mb-3">Emisor en factura</h2>
+      <div class="space-y-3">
+        <div>
+          <%= f.label :billing_display_name, "Nombre que aparece en la factura", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :billing_display_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :billing_nif, "NIF / CIF", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :billing_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :billing_address_line, "Dirección (línea)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :billing_address_line, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :billing_postal_code, "C.P.", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.text_field :billing_postal_code, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :billing_city, "Ciudad", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.text_field :billing_city, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :billing_province, "Provincia", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.text_field :billing_province, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :billing_country, "País", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.text_field :billing_country, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :billing_phone, "Teléfono", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.text_field :billing_phone, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :billing_email, "Email de contacto en factura", class: "block text-xs font-medium text-gray-600 mb-1" %>
+            <%= f.email_field :billing_email, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-800 mb-3">Cobros (PDF)</h2>
+      <div class="space-y-3">
+        <div>
+          <%= f.label :payment_methods_note, "Texto «Signed» / formas de pago (ej. Cash / Bizum / …)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_area :payment_methods_note, rows: 2, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :paypal_email, "PayPal", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :paypal_email, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :iban, "IBAN", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :iban, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-800 mb-3">Numeración facturas emitidas</h2>
+      <p class="text-xs text-gray-500 mb-3">Ej.: prefijo <code class="bg-gray-100 px-1 rounded">F2026</code>, 3 dígitos → F2026001, F2026002… Puedes cambiar el siguiente número si saltas huecos.</p>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <%= f.label :invoice_number_prefix, "Prefijo", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :invoice_number_prefix, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :invoice_number_digit_count, "Dígitos", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.number_field :invoice_number_digit_count, min: 1, max: 12, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :invoice_number_next, "Siguiente n.º", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.number_field :invoice_number_next, min: 1, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+        </div>
+      </div>
+    </section>
+
+    <%= f.submit "Guardar", class: "bg-blue-600 text-white px-5 py-2 rounded text-sm font-medium cursor-pointer" %>
+  <% end %>
+</div>

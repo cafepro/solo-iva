@@ -1,0 +1,48 @@
+<% content_for :title, "Factura #{@invoice.invoice_number} — SoloIVA" %>
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Factura <%= @invoice.invoice_number %></h1>
+    <p class="text-sm text-gray-500 mt-1"><%= @invoice.invoice_date&.strftime("%d/%m/%Y") %> · <%= @invoice.emitida? ? "Emitida" : "Recibida" %></p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <% if @invoice.emitida? %>
+      <%= link_to "Descargar PDF", pdf_invoice_path(@invoice), class: "inline-flex items-center px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium hover:bg-gray-900" %>
+    <% end %>
+    <%= link_to "Editar", edit_invoice_path(@invoice), class: "inline-flex items-center px-4 py-2 rounded border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50" %>
+    <%= link_to "Volver al listado", invoices_path(invoice_type: @invoice.invoice_type), class: "text-sm text-blue-600 hover:underline self-center" %>
+  </div>
+</div>
+
+<div class="bg-white rounded-lg border p-6 space-y-4 text-sm max-w-2xl">
+  <div class="grid grid-cols-2 gap-2">
+    <span class="text-gray-500">Emisor</span>
+    <span class="font-medium"><%= @invoice.issuer_name.presence || "—" %></span>
+    <span class="text-gray-500">NIF emisor</span>
+    <span><%= @invoice.issuer_nif.presence || "—" %></span>
+    <span class="text-gray-500"><%= @invoice.emitida? ? "Cliente" : "Proveedor" %></span>
+    <span class="font-medium"><%= @invoice.emitida? ? @invoice.recipient_name.presence || "—" : @invoice.issuer_name.presence || "—" %></span>
+  </div>
+  <% if @invoice.emitida? && @invoice.recipient_address_line.present? %>
+    <p class="text-gray-600 text-xs border-t pt-3">
+      <%= @invoice.recipient_address_line %><br>
+      <%= [@invoice.recipient_postal_code, @invoice.recipient_city].compact_blank.join(" ") %>
+      <%= [@invoice.recipient_province, @invoice.recipient_country].compact_blank.join(", ") %>
+    </p>
+  <% end %>
+  <div class="border-t pt-3">
+    <p class="text-xs text-gray-500 uppercase mb-2">Líneas</p>
+    <ul class="space-y-1">
+      <% @invoice.invoice_lines.each do |line| %>
+        <li class="flex justify-between gap-4">
+          <span><%= line.description.presence || "Concepto" %> · <%= line.iva_rate.to_i %>%</span>
+          <span class="tabular-nums"><%= number_to_currency(line.base_imponible, unit: "€", separator: ",", delimiter: ".") %></span>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+  <div class="border-t pt-3 flex justify-between font-semibold">
+    <span>Total</span>
+    <span><%= number_to_currency(@invoice.total, unit: "€", separator: ",", delimiter: ".") %></span>
+  </div>
+</div>

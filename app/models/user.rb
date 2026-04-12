@@ -5,8 +5,22 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_many :invoices, dependent: :destroy
+  has_many :clients, dependent: :destroy
   has_many :pdf_uploads, dependent: :destroy
   has_many :invoice_upload_stashes, dependent: :delete_all
+
+  validates :invoice_number_digit_count,
+            numericality: { only_integer: true, greater_than: 0, less_than: 13 }
+  validates :invoice_number_next,
+            numericality: { only_integer: true, greater_than: 0 }
+
+  # Atributos de emisor para nuevas facturas emitidas (rellenar desde "Datos de facturación").
+  def default_issuer_attributes_for_invoice
+    {
+      issuer_name: billing_display_name.presence || email&.split("@")&.first&.humanize,
+      issuer_nif:  billing_nif
+    }
+  end
 
   def google_drive_ready?
     google_drive_refresh_token.present? && google_drive_sync_enabled?

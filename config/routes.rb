@@ -15,9 +15,14 @@ Rails.application.routes.draw do
         post :upload_pdfs
       end
       member do
+        get :pdf
         patch :confirm
       end
     end
+
+    resources :clients, except: :show
+
+    resource :billing_profile, only: %i[show update]
 
     resources :pdf_uploads, only: :destroy
 

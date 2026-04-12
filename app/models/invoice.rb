@@ -1,5 +1,6 @@
 class Invoice < ApplicationRecord
   belongs_to :user
+  belongs_to :client, optional: true
   belongs_to :pdf_upload, optional: true
   has_many :invoice_lines, dependent: :destroy
   accepts_nested_attributes_for :invoice_lines, allow_destroy: true, reject_if: :all_blank
@@ -17,6 +18,9 @@ class Invoice < ApplicationRecord
 
   validates :invoice_type, :invoice_date, :invoice_number, presence: true
   validate :invoice_number_unique_among_confirmed, if: :confirmed?
+  validate :client_must_belong_to_user
+
+  before_validation :snapshot_from_client, if: :should_snapshot_from_client?
 
   def totals
     InvoiceTotals.new(invoice_lines)
@@ -57,6 +61,29 @@ class Invoice < ApplicationRecord
   end
 
   private
+
+  def client_must_belong_to_user
+    return if client_id.blank?
+
+    errors.add(:client_id, :invalid) unless user.clients.exists?(id: client_id)
+  end
+
+  def should_snapshot_from_client?
+    emitida? && client_id.present? && (new_record? || saved_change_to_client_id?)
+  end
+
+  def snapshot_from_client
+    c = user.clients.find_by(id: client_id)
+    return unless c
+
+    self.recipient_name          = c.name
+    self.recipient_nif           = c.nif
+    self.recipient_address_line  = c.address_line
+    self.recipient_postal_code   = c.postal_code
+    self.recipient_city          = c.city
+    self.recipient_province      = c.province
+    self.recipient_country       = c.country.presence || "España"
+  end
 
   def invoice_number_unique_among_confirmed
     return if invoice_number.blank?

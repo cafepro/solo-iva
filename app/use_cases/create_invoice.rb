@@ -1,14 +1,25 @@
 class CreateInvoice
-  def initialize(user:, params:, source_stash_token: nil)
-    @user               = user
-    @params             = params
-    @source_stash_token = source_stash_token
+  def initialize(user:, params:, source_stash_token: nil, auto_invoice_number: false)
+    @user                 = user
+    @params               = params
+    @source_stash_token   = source_stash_token
+    @auto_invoice_number  = auto_invoice_number
   end
 
   def call
-    invoice = @user.invoices.build(@params)
-    apply_source_stash!(invoice)
-    ok = invoice.save
+    invoice = nil
+    ok      = false
+
+    ActiveRecord::Base.transaction do
+      invoice = @user.invoices.build(@params)
+      if @auto_invoice_number && invoice.emitida?
+        invoice.invoice_number = AssignNextInvoiceNumber.new(@user).consume!
+      end
+      apply_source_stash!(invoice)
+      ok = invoice.save
+      raise ActiveRecord::Rollback unless ok
+    end
+
     clear_stash_if_ok(ok)
     enqueue_drive_backup(invoice) if ok
     { ok: ok, invoice: invoice }

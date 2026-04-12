@@ -184,9 +184,9 @@ export default class extends Controller {
       this.linesContainerTarget.innerHTML = ""
       data.lines.forEach(line => {
         const row = this.buildLineRow()
-        const rateSelect = row.querySelector("select")
-        const baseInput  = row.querySelectorAll("input[type='number']")[0]
-        const quotaInput = row.querySelectorAll("input[type='number']")[1]
+        const rateSelect = row.querySelector("select[name*='iva_rate']")
+        const baseInput  = row.querySelector("input[name*='base_imponible']")
+        const quotaInput = row.querySelector("input[type='number'][readonly]")
         if (rateSelect) rateSelect.value = line.iva_rate
         if (baseInput)  baseInput.value  = parseFloat(line.base_imponible).toFixed(2)
         if (quotaInput) quotaInput.value = parseFloat(line.iva_amount).toFixed(2)
@@ -221,7 +221,7 @@ export default class extends Controller {
 
     const rateSelect = row.querySelector("select[name*='iva_rate']")
     const baseInput  = row.querySelector("input[name*='base_imponible']")
-    const quotaInput = row.querySelectorAll("input[type='number']")[1]
+    const quotaInput = row.querySelector("input[type='number'][readonly]")
 
     const updateQuota = () => {
       const base = parseFloat(baseInput?.value) || 0

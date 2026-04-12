@@ -1,5 +1,5 @@
 class InvoicesController < ApplicationController
-  before_action :set_invoice, only: %i[show edit update destroy confirm]
+  before_action :set_invoice, only: %i[show edit update destroy confirm pdf]
 
   SORTABLE_COLUMNS = %w[invoice_number invoice_date invoice_type].freeze
 
@@ -63,25 +63,52 @@ class InvoicesController < ApplicationController
   def show
   end
 
+  def pdf
+    unless @invoice.emitida?
+      redirect_to invoice_path(@invoice), alert: "El PDF de factura solo aplica a emitidas."
+      return
+    end
+
+    pdf_io = IssuedInvoicePdf.render(@invoice)
+    send_data pdf_io.read,
+              filename:     "#{@invoice.invoice_number.presence || 'factura'}.pdf",
+              type:         "application/pdf",
+              disposition:  "attachment"
+  end
+
   def new
     @invoice = current_user.invoices.build(invoice_type: params[:invoice_type].presence)
+    @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview
+    if @invoice.emitida?
+      @invoice.assign_attributes(current_user.default_issuer_attributes_for_invoice)
+      @invoice.invoice_number = @suggested_invoice_number
+    end
     @invoice.invoice_lines.build
+    @clients = current_user.clients.order(:name)
   end
 
   def edit
     @invoice.invoice_lines.build if @invoice.invoice_lines.empty?
+    @clients = current_user.clients.order(:name)
+    @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview
   end
 
   def create
     permitted = invoice_params
     stash     = permitted[:source_stash_token]
     permitted = permitted.except(:source_stash_token)
-    result = CreateInvoice.new(user: current_user, params: permitted, source_stash_token: stash).call
+    auto_num  = params[:use_auto_invoice_number] == "1"
+    result = CreateInvoice.new(
+      user: current_user, params: permitted, source_stash_token: stash,
+      auto_invoice_number: auto_num
+    ).call
     @invoice = result[:invoice]
 
     if result[:ok]
       redirect_to invoices_path, notice: "Factura guardada correctamente."
     else
+      @clients = current_user.clients.order(:name)
+      @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview
       render :new, status: :unprocessable_entity
     end
   end
@@ -102,6 +129,8 @@ class InvoicesController < ApplicationController
       path = @invoice.pending? ? review_invoices_path : invoices_path
       redirect_to path, notice: notice
     else
+      @clients = current_user.clients.order(:name)
+      @suggested_invoice_number = AssignNextInvoiceNumber.new(current_user).preview if @invoice.emitida?
       render :edit, status: :unprocessable_entity
     end
   end
@@ -203,8 +232,10 @@ class InvoicesController < ApplicationController
     params.require(:invoice).permit(
       :invoice_type, :invoice_number, :invoice_date,
       :issuer_name, :issuer_nif, :recipient_name, :recipient_nif, :notes,
-      :source_stash_token,
-      invoice_lines_attributes: %i[id iva_rate base_imponible _destroy]
+      :client_id, :recipient_address_line, :recipient_postal_code, :recipient_city,
+      :recipient_province, :recipient_country, :service_period_start, :service_period_end,
+      :payment_signed_note, :source_stash_token,
+      invoice_lines_attributes: %i[id description iva_rate base_imponible _destroy]
     )
   end
 

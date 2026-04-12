@@ -53,6 +53,30 @@ RSpec.describe CreateInvoice do
       end
     end
 
+    context "with auto_invoice_number for emitida" do
+      before do
+        user.update!(
+          invoice_number_prefix:      "T",
+          invoice_number_digit_count: 2,
+          invoice_number_next:        5
+        )
+      end
+
+      let(:auto_params) do
+        valid_params.merge(
+          invoice_number:           "IGNORED",
+          invoice_lines_attributes: { "0" => { iva_rate: 21, base_imponible: "10.0" } }
+        )
+      end
+
+      it "assigns next sequential number and increments counter" do
+        result = described_class.new(user: user, params: auto_params, auto_invoice_number: true).call
+        expect(result[:ok]).to be true
+        expect(result[:invoice].invoice_number).to eq("T05")
+        expect(user.reload.invoice_number_next).to eq(6)
+      end
+    end
+
     context "with a source stash token" do
       let(:stash_token) do
         InvoiceUploadStash.store!(user: user, file_data: "%PDF-1".b, filename: "orig.pdf")
