@@ -16,7 +16,9 @@
     <% if user_signed_in? %>
       <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div class="flex items-center gap-6">
-          <%= link_to "SoloIVA", dashboard_path, class: "font-bold text-blue-700 text-lg" %>
+          <%= link_to dashboard_path, class: "flex items-center shrink-0 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" do %>
+            <%= image_tag "soloiva_logo.png", alt: "SoloIVA", class: "h-8 w-auto sm:h-9" %>
+          <% end %>
           <%= render "layouts/pending_badge", count: current_user.invoices.pending_review.count %>
           <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
           <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
