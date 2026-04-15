@@ -2,18 +2,20 @@ require "prawn"
 require "prawn/table"
 
 module Pdf
-  # PDF de factura emitida — estilo plantilla tipo F2026013 / F2026020 (banda naranja, Service/price).
+  # PDF de factura emitida (Prawn). Diseño limpio, marca SoloIVA, textos en español.
   class IssuedInvoicePdf
     MARGIN_H = 48
-    MARGIN_V = 44
-    ACCENT_ORANGE = "F79646"
-    TEXT_MUTED = "555555"
-    RULE_COLOR = "DDDDDD"
-    BANNER_HEIGHT = 44
-    SECTION_BAR_H = 22
-    # Cabecera tabla: ~68% / ~32% como en el PDF de referencia
-    SERVICE_COL_FRAC = 0.681
-    PRICE_COL_FRAC = 0.319
+    MARGIN_V = 48
+
+    NAVY     = "1D416E"
+    TEAL     = "3DB2A4"
+    TEXT     = "1f2937"
+    MUTED    = "6b7280"
+    BORDER       = "e5e7eb"
+    RECIPIENT_BG = "E8F6F4"
+    # Cabecera: espacio suficiente para título (emisor) a la izquierda y N.º + fecha a la derecha.
+    HEADER_H = 58
+    HEADER_RIGHT_COL_W = 252
 
     def self.render(invoice)
       raise ArgumentError, "solo facturas emitidas" unless invoice.emitida?
@@ -23,301 +25,310 @@ module Pdf
       pdf = Prawn::Document.new(
         page_size: "A4",
         margin:    [ MARGIN_V, MARGIN_H, MARGIN_V, MARGIN_H ],
-        info:      { Title: "Invoice #{invoice.invoice_number}" }
+        info:      {
+          Title:    "Factura #{invoice.invoice_number}",
+          Creator:  "SoloIVA",
+          Producer: "SoloIVA"
+        }
       )
 
-      top_banner(pdf, invoice)
-      pdf.move_down 12
+      pdf.font "Helvetica"
 
-      issuer_and_meta_row(pdf, invoice)
-      pdf.move_down 16
+      draw_header(pdf, invoice)
+      pdf.move_down 22
 
-      orange_section_bar(pdf, "CLIENT:")
-      # Separar claramente el bloque cliente de la barra naranja (evita solapamiento visual)
-      pdf.move_down 12
-      client_block(pdf, invoice)
+      draw_section_title(pdf, "Emisor")
+      pdf.move_down 6
+      draw_issuer(pdf, invoice)
+      pdf.move_down 18
+
+      draw_section_title(pdf, "Cliente")
+      pdf.move_down 6
+      draw_recipient(pdf, invoice)
+      pdf.move_down 18
+
+      draw_lines_table(pdf, invoice)
       pdf.move_down 14
 
-      lines_table(pdf, invoice)
-      pdf.move_down 10
-
-      discount_placeholder_row(pdf, invoice)
-      totals_block(pdf, invoice)
-      pdf.move_down 14
-
-      payment_block(pdf, invoice)
+      draw_totals(pdf, invoice)
       pdf.move_down 16
 
-      legal_footer(pdf)
+      draw_payment_and_notes(pdf, invoice)
+      pdf.move_down 12
+
+      draw_footer(pdf)
 
       StringIO.new(pdf.render)
     end
 
-    def self.top_banner(pdf, invoice)
+    def self.draw_header(pdf, invoice)
       w = pdf.bounds.width
       top = pdf.cursor
-      y0 = top - BANNER_HEIGHT
+      pad_x = 14
+      gap   = 12
+      right_w = [ HEADER_RIGHT_COL_W, w * 0.48 ].min
+      left_w  = w - pad_x - gap - right_w
 
       pdf.save_graphics_state
-      pdf.fill_color ACCENT_ORANGE
-      pdf.fill_rectangle [ 0, y0 ], w, BANNER_HEIGHT
-
-      logo_r = 15
-      cx = 18 + logo_r
-      cy = y0 + BANNER_HEIGHT / 2.0
-      draw_initials_badge(pdf, invoice, cx, cy, logo_r)
-
+      pdf.fill_color NAVY
+      pdf.fill_rectangle [ 0, top ], w, HEADER_H
       pdf.fill_color "FFFFFF"
-      pdf.text_box "Invoice",
-        at:       [ 52, y0 + BANNER_HEIGHT - 32 ],
-        width:    w - 60,
-        height:   34,
-        size:     20,
-        style:    :bold,
-        valign:   :center
-      pdf.restore_graphics_state
 
-      pdf.fill_color "000000"
-      pdf.move_down BANNER_HEIGHT
-    end
-
-    def self.draw_initials_badge(pdf, invoice, cx, cy, radius)
-      initials = initials_for(invoice)
+      title = header_title(invoice)
       pdf.fill_color "FFFFFF"
-      pdf.fill do
-        pdf.circle [ cx, cy ], radius
-      end
-      pdf.fill_color ACCENT_ORANGE
-      pdf.text_box initials.upcase,
-        at:     [ cx - radius - 1, cy - 6 ],
-        width:  radius * 2 + 2,
-        height: 16,
-        align:  :center,
-        valign: :center,
-        size:   11,
-        style:  :bold
-      pdf.fill_color "000000"
-    end
+      pdf.text_box title,
+        at:             [ pad_x, top - 8 ],
+        width:          left_w,
+        height:         HEADER_H - 12,
+        size:           15,
+        style:          :bold,
+        valign:         :center,
+        overflow:       :shrink_to_fit,
+        min_font_size:  9
 
-    def self.initials_for(invoice)
-      name = invoice.issuer_name.presence || invoice.user.billing_display_name.presence || invoice.user.email.to_s
-      parts = name.to_s.split(/\s+/).reject(&:blank?).first(2)
-      return "IV" if parts.empty?
-
-      parts.map { |p| p[0] }.join
-    end
-
-    def self.issuer_and_meta_row(pdf, invoice)
-      u = invoice.user
-      w = pdf.bounds.width
-      left_w = w * 0.52
-      right_w = w - left_w
       num = invoice.invoice_number.presence || "—"
-      dt  = format_invoice_date(invoice.invoice_date)
+      fecha = format_date(invoice.invoice_date)
+      right_x = w - right_w - pad_x
 
-      left_lines = []
-      left_lines << "<b>#{pdf_escape(invoice.issuer_name.presence || '—')}</b>"
-      left_lines << ""
-      left_lines << "<color rgb='#{TEXT_MUTED}'>NIF - #{pdf_escape(invoice.issuer_nif.presence || '—')}</color>"
-      left_lines << ""
-      left_lines.concat(
-        [
-          u.billing_address_line,
-          [ u.billing_postal_code, u.billing_city ].compact_blank.join(" "),
-          [ u.billing_province, u.billing_country ].compact_blank.join(", ")
-        ].compact_blank.map { |t| pdf_escape(t) }
-      )
-      left_lines << ""
-      left_lines << "<color rgb='#{TEXT_MUTED}'>#{pdf_escape(u.billing_phone)}</color>" if u.billing_phone.present?
-      left_lines << "<color rgb='#{TEXT_MUTED}'>#{pdf_escape(u.billing_email.presence || u.email.to_s)}</color>"
+      pdf.text_box "N.º #{escape_pdf(num)}\nFecha  #{escape_pdf(fecha)}",
+        at:             [ right_x, top - 8 ],
+        width:          right_w,
+        height:         HEADER_H - 12,
+        size:           9,
+        align:          :right,
+        valign:         :center,
+        leading:        5,
+        inline_format:  true
 
-      right_lines = []
-      right_lines << "<color rgb='#{TEXT_MUTED}'>Invoice number:</color>  <b>#{pdf_escape(num)}</b>"
-      right_lines << ""
-      right_lines << "<color rgb='#{TEXT_MUTED}'>Date:</color>  <b>#{pdf_escape(dt)}</b>"
+      pdf.restore_graphics_state
+      pdf.fill_color TEXT
+      pdf.move_down HEADER_H + 2
+    end
+
+    def self.header_title(invoice)
+      u = invoice.user
+      u.invoice_pdf_header_title.presence ||
+        invoice.issuer_name.presence ||
+        u.billing_display_name.presence ||
+        "Factura"
+    end
+
+    def self.draw_section_title(pdf, title)
+      pdf.fill_color TEAL
+      pdf.text title.upcase, size: 8, style: :bold, character_spacing: 0.8
+      pdf.fill_color TEXT
+      pdf.move_down 4
+      pdf.stroke_color BORDER
+      pdf.line_width 0.5
+      pdf.stroke_horizontal_line 0, pdf.bounds.width, at: pdf.cursor
+      pdf.move_down 6
+    end
+
+    def self.draw_issuer(pdf, invoice)
+      u = invoice.user
+      pdf.text (invoice.issuer_name.presence || "—").to_s, size: 11, style: :bold
+      pdf.move_down 4
+      muted_line(pdf, "NIF / CIF  #{invoice.issuer_nif.presence || '—'}")
+      pdf.move_down 6
+
+      [
+        u.billing_address_line,
+        [ u.billing_postal_code, u.billing_city ].compact_blank.join(" "),
+        [ u.billing_province, u.billing_country ].compact_blank.join(", ")
+      ].compact_blank.each do |line|
+        pdf.text line.to_s, size: 9, color: TEXT
+        pdf.move_down 2
+      end
+
+      pdf.move_down 4
+      muted_line(pdf, u.billing_phone) if u.billing_phone.present?
+      muted_line(pdf, (u.billing_email.presence || u.email).to_s)
+    end
+
+    def self.draw_recipient(pdf, invoice)
+      w = pdf.bounds.width
+      lines = []
+      lines << "<b>#{escape_pdf(invoice.recipient_name.presence || '—')}</b>"
+      lines << ""
+      lines << "<color rgb='#{MUTED}'>NIF / CIF  #{escape_pdf(invoice.recipient_nif.presence || '—')}</color>"
+      lines << ""
+      [
+        invoice.recipient_address_line,
+        [ invoice.recipient_postal_code, invoice.recipient_city ].compact_blank.join(", "),
+        [ invoice.recipient_province, invoice.recipient_country ].compact_blank.join(", ")
+      ].compact_blank.each { |t| lines << escape_pdf(t) }
 
       pdf.table(
-        [
-          [
-            { content: left_lines.join("\n"), inline_format: true, valign: :top, padding: [ 2, 4, 6, 0 ] },
-            { content: right_lines.join("\n"), inline_format: true, valign: :top, align: :right, padding: [ 2, 0, 6, 12 ] }
-          ]
-        ],
-        column_widths: [ left_w, right_w ],
-        width:         w
-      ) do
-        cells.borders = []
-        columns(0).size = 9
-        columns(1).size = 10
-      end
+        [ [ { content: lines.join("\n"), inline_format: true, padding: [ 12, 14, 12, 14 ], valign: :top } ] ],
+        width: w,
+        cell_style: { borders: [], background_color: RECIPIENT_BG, size: 9 }
+      )
     end
 
-    def self.format_invoice_date(date)
-      return "—" if date.blank?
-
-      "#{date.day}/#{date.month}/#{date.year}"
-    end
-
-    def self.orange_section_bar(pdf, label)
-      w = pdf.bounds.width
-      top = pdf.cursor
-      y0 = top - SECTION_BAR_H
-
-      pdf.fill_color ACCENT_ORANGE
-      pdf.fill_rectangle [ 0, y0 ], w, SECTION_BAR_H
-      pdf.fill_color "FFFFFF"
-      pdf.text_box label,
-        at:     [ 10, y0 + SECTION_BAR_H - 20 ],
-        width:  w - 20,
-        height: SECTION_BAR_H,
-        size:   10,
-        style:  :bold,
-        valign: :center
-      pdf.fill_color "000000"
-      pdf.move_down SECTION_BAR_H
-    end
-
-    def self.client_block(pdf, invoice)
-      pdf.text (invoice.recipient_name.presence || "—").to_s, size: 11, style: :bold
-      pdf.move_down 3
-      pdf.fill_color TEXT_MUTED
-      pdf.text (invoice.recipient_nif.presence || "—").to_s, size: 9
-      pdf.fill_color "000000"
-      pdf.move_down 5
-      add_lines(pdf, [
-        invoice.recipient_address_line,
-        [
-          invoice.recipient_postal_code,
-          invoice.recipient_city
-        ].compact_blank.join(", "),
-        [
-          invoice.recipient_province,
-          invoice.recipient_country
-        ].compact_blank.join(", ")
-      ].compact_blank, size: 9)
-    end
-
-    def self.add_lines(pdf, lines, size: 10)
-      lines.each { |line| pdf.text line.to_s, size: size if line.present? }
-    end
-
-    def self.lines_table(pdf, invoice)
+    def self.draw_lines_table(pdf, invoice)
       lines = invoice.invoice_lines.to_a
-
       if lines.empty?
-        pdf.text "No service lines.", size: 9, color: TEXT_MUTED
+        pdf.text "No hay líneas de detalle.", size: 9, color: MUTED
         return
       end
 
       w = pdf.bounds.width
-      w_svc = w * SERVICE_COL_FRAC
-      w_price = w * PRICE_COL_FRAC
+      w_desc = w * 0.46
+      w_rate = w * 0.12
+      w_base = w * 0.21
+      w_iva  = w * 0.21
 
-      data = [
-        [
-          { content: "Service", background_color: ACCENT_ORANGE, text_color: "FFFFFF", font_style: :bold,
-            align: :left },
-          { content: "price", background_color: ACCENT_ORANGE, text_color: "FFFFFF", font_style: :bold,
-            align: :right }
-        ]
+      header = [
+        { content: "Concepto", background_color: NAVY, text_color: "FFFFFF", font_style: :bold },
+        { content: "% IVA", background_color: NAVY, text_color: "FFFFFF", font_style: :bold, align: :center },
+        { content: "Base imponible", background_color: NAVY, text_color: "FFFFFF", font_style: :bold, align: :right },
+        { content: "Cuota IVA", background_color: NAVY, text_color: "FFFFFF", font_style: :bold, align: :right }
       ]
+
+      data = [ header ]
       lines.each do |line|
-        desc = line.description.presence || "Service"
-        desc = period_suffix(desc, invoice)
-        data << [ desc, "#{format_money(line.base_imponible)} €" ]
+        data << [
+          concept_cell(line, invoice),
+          "#{line.iva_rate.to_i} %",
+          "#{format_money(line.base_imponible)} €",
+          "#{format_money(line.iva_amount)} €"
+        ]
       end
 
-      pdf.table(data, column_widths: [ w_svc, w_price ], width: w) do
+      pdf.table(data, column_widths: [ w_desc, w_rate, w_base, w_iva ], width: w) do
         cells.style(
-          size:          9,
-          padding:       [ 6, 10, 6, 10 ],
-          borders:       [ :bottom ],
-          border_color:  RULE_COLOR,
-          border_width:  0.5,
-          valign:        :top
+          size:         9,
+          padding:      [ 7, 8, 7, 8 ],
+          borders:      [ :bottom ],
+          border_color: BORDER,
+          border_width: 0.5,
+          valign:       :top
         )
         row(0).borders = [ :bottom ]
         row(0).border_width = 0
-        row(0).padding = [ 8, 10, 8, 10 ]
+        row(0).padding = [ 9, 8, 9, 8 ]
         row(0).valign = :center
-        columns(1).align = :right
+        columns(1).align = :center
+        columns(2).align = :right
+        columns(3).align = :right
       end
     end
 
-    def self.period_suffix(description, invoice)
-      return description.to_s if invoice.service_period_start.blank? || invoice.service_period_end.blank?
-
-      d1 = format_invoice_date(invoice.service_period_start)
-      d2 = format_invoice_date(invoice.service_period_end)
-      "#{description}\n#{d1} to #{d2}"
-    end
-
-    def self.discount_placeholder_row(pdf, invoice)
-      return if invoice.invoice_lines.empty?
-
-      pdf.fill_color TEXT_MUTED
-      pdf.text "DTO.-", size: 9
-      pdf.fill_color "000000"
-      pdf.move_down 8
-    end
-
-    def self.totals_block(pdf, invoice)
-      totals = invoice.totals
-      base = totals.base
-      iva_total = totals.iva
-      grand = totals.total
-
-      rate_label = if invoice.invoice_lines.any? && invoice.invoice_lines.map { |l| l.iva_rate.to_i }.uniq.length == 1
-        "#{invoice.invoice_lines.first.iva_rate.to_i}% IVA / taxes:"
+    def self.concept_cell(line, invoice)
+      desc = line.description.presence || "Concepto"
+      if invoice.service_period_start.present? && invoice.service_period_end.present?
+        d1 = format_date(invoice.service_period_start)
+        d2 = format_date(invoice.service_period_end)
+        {
+          content:       "#{escape_pdf(desc)}\n<color rgb='#{MUTED}'>Periodo: del #{d1} al #{d2}</color>",
+          inline_format: true
+        }
       else
-        "IVA / taxes:"
-      end
-
-      w = pdf.bounds.width
-      col_w = w * 0.48
-      x0 = w - col_w
-
-      pdf.bounding_box([ x0, pdf.cursor ], width: col_w) do
-        pdf.text "<color rgb='#{TEXT_MUTED}'>Base:</color>    <b>#{format_money(base)} €</b>",
-          inline_format: true, size: 10, align: :right, leading: 2
-        pdf.move_down 6
-        pdf.text "<color rgb='#{TEXT_MUTED}'>#{pdf_escape(rate_label)}</color>    <b>#{format_money(iva_total)} €</b>",
-          inline_format: true, size: 10, align: :right, leading: 2
-        pdf.move_down 10
-        pdf.text "Total to pay:    <b>#{format_money(grand)} €</b>",
-          inline_format: true, size: 12, style: :bold, align: :right
+        escape_pdf(desc)
       end
     end
 
-    def self.payment_block(pdf, invoice)
+    def self.draw_totals(pdf, invoice)
+      totals = invoice.totals
+      w = pdf.bounds.width
+      col_w = [ w * 0.55, w * 0.45 ]
+
+      rows = [
+        [ { content: "Base imponible", text_color: MUTED }, "#{format_money(totals.base)} €" ],
+        [ { content: "IVA", text_color: MUTED },            "#{format_money(totals.iva)} €" ]
+      ]
+
+      pdf.table(rows, column_widths: col_w, width: w) do
+        cells.borders = []
+        cells.padding = [ 4, 0, 4, 0 ]
+        columns(0).align = :right
+        columns(1).align = :right
+        columns(0).size = 10
+        columns(1).size = 10
+        columns(1).font_style = :bold
+      end
+
+      pdf.move_down 8
+      pdf.stroke_color BORDER
+      pdf.line_width 1
+      pdf.stroke_horizontal_line w - col_w[1], w, at: pdf.cursor
+      pdf.move_down 6
+
+      pdf.text "<color rgb='#{MUTED}'>Total factura</color>    <b>#{format_money(totals.total)} €</b>",
+        inline_format: true,
+        size:          13,
+        align:         :right
+    end
+
+    def self.draw_payment_and_notes(pdf, invoice)
       u = invoice.user
+
+      if invoice.notes.present?
+        pdf.fill_color MUTED
+        pdf.text "Observaciones", size: 8, style: :bold
+        pdf.fill_color TEXT
+        pdf.move_down 3
+        pdf.text invoice.notes.to_s, size: 9, leading: 3
+        pdf.move_down 10
+      end
+
       note = invoice.payment_signed_note.presence || u.payment_methods_note.presence
       if note.present?
-        pdf.text "<color rgb='#{TEXT_MUTED}'>Signed:</color>  #{pdf_escape(note)}",
-          inline_format: true, size: 9
-        pdf.move_down 5
+        pdf.fill_color MUTED
+        pdf.text "Forma de pago / condiciones", size: 8, style: :bold
+        pdf.fill_color TEXT
+        pdf.move_down 3
+        pdf.text note.to_s, size: 9, leading: 3
+        pdf.move_down 8
       end
 
-      pdf.fill_color TEXT_MUTED
-      pdf.text "Telephone  #{pdf_escape(u.billing_phone)}", size: 9 if u.billing_phone.present?
-      pdf.text "Paypal  #{pdf_escape(u.paypal_email)}", size: 9 if u.paypal_email.present?
-      pdf.text "IBAN  #{pdf_escape(u.iban)}", size: 9 if u.iban.present?
-      pdf.fill_color "000000"
+      rows = []
+      rows << [ "Teléfono", u.billing_phone ] if u.billing_phone.present?
+      rows << [ "PayPal", u.paypal_email ] if u.paypal_email.present?
+      rows << [ "IBAN", u.iban ] if u.iban.present?
+
+      return if rows.empty?
+
+      pdf.fill_color MUTED
+      pdf.text "Datos de cobro", size: 8, style: :bold
+      pdf.fill_color TEXT
+      pdf.move_down 4
+
+      pdf.table(rows, column_widths: [ 72, pdf.bounds.width - 72 ], width: pdf.bounds.width) do
+        cells.borders = []
+        cells.padding = [ 2, 0, 2, 0 ]
+        cells.size = 9
+        columns(0).text_color = MUTED
+      end
     end
 
-    def self.legal_footer(pdf)
-      pdf.move_down 8
-      pdf.fill_color TEXT_MUTED
-      pdf.text "Generated with SoloIVA", size: 7, align: :center
-      pdf.fill_color "000000"
+    def self.draw_footer(pdf)
+      pdf.move_down 6
+      pdf.fill_color MUTED
+      pdf.text "Documento generado con SoloIVA · Los importes en euros",
+        size: 7,
+        align: :center
+      pdf.fill_color TEXT
     end
 
-    def self.pdf_escape(text)
-      text.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
+    def self.muted_line(pdf, text)
+      pdf.fill_color MUTED
+      pdf.text text.to_s, size: 9
+      pdf.fill_color TEXT
+    end
+
+    def self.format_date(date)
+      return "—" if date.blank?
+
+      "#{date.day.to_s.rjust(2, '0')}/#{date.month.to_s.rjust(2, '0')}/#{date.year}"
     end
 
     def self.format_money(amount)
       format("%.2f", amount.to_f).tr(".", ",")
+    end
+
+    def self.escape_pdf(text)
+      text.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
     end
   end
 end

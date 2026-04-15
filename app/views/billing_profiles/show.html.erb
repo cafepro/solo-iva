@@ -21,6 +21,15 @@
           <%= f.text_field :billing_display_name, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
         </div>
         <div>
+          <%= f.label :invoice_pdf_header_title, "Título en la cabecera del PDF (opcional)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.text_field :invoice_pdf_header_title,
+                placeholder: "Ej.: Almacén39 coworking",
+                class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
+          <p class="mt-1 text-xs text-gray-500">
+            Si lo rellenas, es el texto grande de la franja superior del PDF. Si lo dejas vacío, se usa el nombre del emisor de cada factura y, si no hay, el nombre de facturación.
+          </p>
+        </div>
+        <div>
           <%= f.label :billing_nif, "NIF / CIF", class: "block text-xs font-medium text-gray-600 mb-1" %>
           <%= f.text_field :billing_nif, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
         </div>

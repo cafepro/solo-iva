@@ -17,6 +17,7 @@ class BillingProfilesController < ApplicationController
 
   def billing_profile_params
     params.require(:user).permit(
+      :invoice_pdf_header_title,
       :billing_display_name, :billing_nif, :billing_address_line,
       :billing_postal_code, :billing_city, :billing_province, :billing_country,
       :billing_phone, :billing_email, :paypal_email, :iban, :payment_methods_note,
