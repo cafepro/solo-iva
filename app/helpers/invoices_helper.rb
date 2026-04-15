@@ -7,7 +7,7 @@ module InvoicesHelper
     qs = request.query_parameters.merge("sort" => col, "dir" => next_dir)
     link = link_to(
       invoices_path(qs),
-      class: "inline-flex items-center gap-1 hover:text-gray-800 #{active ? 'text-gray-800 font-semibold' : ''}"
+      class: "inline-flex items-center gap-1 #{active ? 'text-brand-navy font-semibold' : 'text-brand-navy/55 hover:text-brand-navy'}"
     ) { "#{label}#{arrow}".html_safe }
 
     content_tag(:th, link, class: "px-4 py-3 text-#{align}")

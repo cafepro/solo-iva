@@ -5,7 +5,7 @@
 <%= turbo_stream_from "pending_badge_#{current_user.id}" %>
 
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold text-gray-800">Subir facturas</h1>
+  <h1 class="text-2xl font-bold text-brand-navy">Subir facturas</h1>
 </div>
 
 <%# PDF UPLOAD ZONE %>
@@ -17,13 +17,13 @@
 
   <div data-pdf-upload-target="dropzone"
        data-action="dragover->pdf-upload#onDragOver dragleave->pdf-upload#onDragLeave drop->pdf-upload#onDrop click->pdf-upload#openFilePicker"
-       class="flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 cursor-pointer transition-colors hover:bg-blue-100 hover:border-blue-400">
-    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       class="flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-brand-teal/35 bg-brand-teal-muted cursor-pointer transition-colors hover:bg-brand-teal-soft hover:border-brand-teal/55">
+    <svg class="w-8 h-8 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
-    <p class="text-sm font-medium text-blue-700">Arrastra PDFs o fotos (JPG, PNG, WebP) o <span class="underline">selecciona archivos</span></p>
-    <p class="text-xs text-blue-500">Cada archivo se procesa en segundo plano. Las facturas aparecerán abajo para revisión.</p>
+    <p class="text-sm font-medium text-brand-navy">Arrastra PDFs o fotos (JPG, PNG, WebP) o <span class="underline">selecciona archivos</span></p>
+    <p class="text-xs text-brand-teal-dark/90">Cada archivo se procesa en segundo plano. Las facturas aparecerán abajo para revisión.</p>
     <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple
            data-pdf-upload-target="fileInput"
            data-action="change->pdf-upload#onFileChange"

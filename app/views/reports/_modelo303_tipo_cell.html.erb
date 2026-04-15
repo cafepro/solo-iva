@@ -1,13 +1,8 @@
 <%# rate: numeric IVA type (0, 4, 10, 21) — no importe en euros %>
 <% texto = number_with_precision(rate, precision: 2, separator: ",", delimiter: ".") %>
-<div class="flex items-center justify-end gap-2">
-  <span class="tabular-nums text-gray-700"><%= texto %> %</span>
-  <button type="button"
-          class="shrink-0 rounded border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          data-controller="clipboard-copy"
-          data-clipboard-copy-text-value="<%= texto %>"
-          data-action="clipboard-copy#copy"
-          title="Copiar el tipo impositivo (formato español)">
-    Copiar
-  </button>
+<div class="flex items-center justify-end gap-1.5">
+  <span class="tabular-nums text-brand-navy/90"><%= texto %> %</span>
+  <%= render "shared/clipboard_copy_icon_button",
+        copy_value: texto,
+        title: "Copiar el tipo impositivo (formato español)" %>
 </div>

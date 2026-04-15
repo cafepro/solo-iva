@@ -1,4 +1,7 @@
 /*
+ * Colores de marca (logo SoloIVA): definidos en app/views/layouts/application.html.erb
+ * (tailwind.config del CDN) — navy #1D416E, teal #3DB2A4 y derivados.
+ *
  * This is a manifest file that'll be compiled into application.css.
  *
  * With Propshaft, assets are served efficiently without preprocessing steps. You can still include

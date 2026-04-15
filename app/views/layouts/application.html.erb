@@ -9,35 +9,54 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: "#1D416E",
+                "navy-dark": "#163558",
+                muted: "#E8EEF5",
+                teal: "#3DB2A4",
+                "teal-dark": "#2f9d90",
+                "teal-muted": "#E8F6F4",
+                "teal-soft": "#d4f0ec"
+              }
+            }
+          }
+        }
+      }
+    </script>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gray-50 min-h-screen">
+  <body class="bg-slate-50 min-h-screen">
     <% if user_signed_in? %>
-      <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <nav class="bg-brand-navy border-b border-brand-navy-dark px-6 py-3 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-6">
-          <%= link_to dashboard_path, class: "flex items-center shrink-0 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" do %>
+          <%= link_to dashboard_path, class: "flex items-center shrink-0 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy" do %>
             <%= image_tag "soloiva_logo.png", alt: "SoloIVA", class: "h-8 w-auto sm:h-9" %>
           <% end %>
           <%= render "layouts/pending_badge", count: current_user.invoices.pending_review.count %>
-          <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Clientes", clients_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Plantillas", service_templates_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Facturación", billing_profile_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Modelo 303", modelo303_reports_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
-          <%= link_to "Google Drive", google_drive_settings_path, class: "text-sm text-gray-600 hover:text-blue-600" %>
+          <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Clientes", clients_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Plantillas", service_templates_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Facturación", billing_profile_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Modelo 303", modelo303_reports_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
+          <%= link_to "Google Drive", google_drive_settings_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors" %>
         </div>
-        <div class="flex items-center gap-4 text-sm text-gray-500">
+        <div class="flex items-center gap-4 text-sm text-white/70">
           <span><%= current_user.email %></span>
-          <%= link_to "Salir", destroy_user_session_path, data: { turbo_method: :delete }, class: "text-red-500 hover:text-red-700" %>
+          <%= link_to "Salir", destroy_user_session_path, data: { turbo_method: :delete }, class: "text-red-300 hover:text-red-100 transition-colors" %>
         </div>
       </nav>
     <% end %>
 
     <main class="max-w-screen-2xl mx-auto w-full px-6 sm:px-8 py-8">
       <% if notice.present? %>
-        <div class="mb-4 px-4 py-2 bg-green-100 text-green-800 rounded"><%= notice %></div>
+        <div class="mb-4 px-4 py-2 rounded border border-brand-teal/25 bg-brand-teal-muted text-brand-navy text-sm"><%= notice %></div>
       <% end %>
       <% if alert.present? %>
         <div class="mb-4 px-4 py-2 bg-red-100 text-red-800 rounded"><%= alert %></div>

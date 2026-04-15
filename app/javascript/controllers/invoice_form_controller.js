@@ -18,18 +18,18 @@ export default class extends Controller {
 
   onDragOver(event) {
     event.preventDefault()
-    this.dropzoneTarget.classList.add("bg-blue-100", "border-blue-500")
+    this.dropzoneTarget.classList.add("bg-brand-teal-soft", "border-brand-teal")
   }
 
   onDragLeave(event) {
     if (!this.dropzoneTarget.contains(event.relatedTarget)) {
-      this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+      this.dropzoneTarget.classList.remove("bg-brand-teal-soft", "border-brand-teal")
     }
   }
 
   onDrop(event) {
     event.preventDefault()
-    this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+    this.dropzoneTarget.classList.remove("bg-brand-teal-soft", "border-brand-teal")
     const file = event.dataTransfer.files[0]
     if (file) this.uploadPdf(file)
   }
@@ -88,7 +88,7 @@ export default class extends Controller {
 
       const btn = document.createElement("button")
       btn.type = "button"
-      btn.className = "text-left px-3 py-2 rounded border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-sm transition-colors"
+      btn.className = "text-left px-3 py-2 rounded border border-gray-200 bg-white hover:bg-brand-teal-muted hover:border-brand-teal/40 text-sm transition-colors"
       btn.innerHTML = `<span class="font-medium">${label}</span>${badge}`
       btn.addEventListener("click", () => { this.loadInvoice(invoices[i]); this.removePicker() })
       container.appendChild(btn)
@@ -99,7 +99,7 @@ export default class extends Controller {
     if (nonDuplicates.length > 1) {
       const saveAll = document.createElement("button")
       saveAll.type = "button"
-      saveAll.className = "mt-1 px-3 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+      saveAll.className = "mt-1 px-3 py-2 rounded bg-brand-teal text-white text-sm font-medium hover:bg-brand-teal-dark transition-colors"
       saveAll.textContent = `Guardar las ${nonDuplicates.length} facturas`
       saveAll.addEventListener("click", () => this.saveAll(nonDuplicates))
       container.appendChild(saveAll)
@@ -248,7 +248,7 @@ export default class extends Controller {
   setStatus(text, type = "ok") {
     const el = this.statusTarget
     el.textContent = text
-    el.classList.remove("hidden", "text-blue-700", "text-amber-700")
-    el.classList.add(type === "warning" ? "text-amber-700" : "text-blue-700")
+    el.classList.remove("hidden", "text-brand-navy", "text-amber-700")
+    el.classList.add(type === "warning" ? "text-amber-700" : "text-brand-navy")
   }
 }

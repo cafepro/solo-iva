@@ -1,8 +1,8 @@
 <% content_for :title, "Clientes — SoloIVA" %>
 
 <div class="mb-6 flex items-center justify-between">
-  <h1 class="text-2xl font-bold text-gray-800">Clientes</h1>
-  <%= link_to "+ Nuevo cliente", new_client_path, class: "text-sm px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" %>
+  <h1 class="text-2xl font-bold text-brand-navy">Clientes</h1>
+  <%= link_to "+ Nuevo cliente", new_client_path, class: "text-sm px-4 py-2 rounded bg-brand-teal text-white hover:bg-brand-teal-dark" %>
 </div>
 
 <% if @clients.any? %>
@@ -23,7 +23,7 @@
             <td class="px-4 py-3 text-gray-600"><%= c.nif.presence || "—" %></td>
             <td class="px-4 py-3 text-gray-600"><%= c.city.presence || "—" %></td>
             <td class="px-4 py-3 text-right space-x-2">
-              <%= link_to "Editar", edit_client_path(c), class: "text-blue-600 hover:underline text-xs" %>
+              <%= link_to "Editar", edit_client_path(c), class: "text-brand-navy hover:text-brand-teal hover:underline text-xs" %>
               <%= button_to "Eliminar", client_path(c), method: :delete, data: { turbo_confirm: "¿Eliminar este cliente? Las facturas ya creadas conservan los datos." }, class: "text-red-500 hover:underline text-xs bg-transparent border-0 cursor-pointer inline" %>
             </td>
           </tr>
@@ -32,5 +32,5 @@
     </table>
   </div>
 <% else %>
-  <p class="text-gray-500">Aún no hay clientes. <%= link_to "Crea el primero", new_client_path, class: "text-blue-600 hover:underline" %> para facturas emitidas.</p>
+  <p class="text-gray-500">Aún no hay clientes. <%= link_to "Crea el primero", new_client_path, class: "text-brand-navy hover:text-brand-teal hover:underline" %> para facturas emitidas.</p>
 <% end %>

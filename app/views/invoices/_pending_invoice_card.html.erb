@@ -17,7 +17,7 @@
   <div class="flex items-start justify-between gap-4">
     <div class="space-y-1">
       <div class="flex items-center gap-2">
-        <span class="text-xs px-2 py-0.5 rounded-full <%= invoice.emitida? ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700' %>">
+        <span class="text-xs px-2 py-0.5 rounded-full <%= invoice.emitida? ? 'bg-brand-muted text-brand-navy' : 'bg-brand-teal-muted text-brand-teal-dark' %>">
           <%= invoice.emitida? ? "Emitida" : "Recibida" %>
         </span>
         <span class="font-semibold text-gray-800"><%= invoice.invoice_number %></span>
@@ -51,11 +51,11 @@
 
   <div class="flex gap-2 pt-1">
     <%= button_to confirm_invoice_path(invoice), method: :patch,
-        class: "bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer" do %>
+        class: "bg-brand-teal text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-brand-teal-dark transition-colors cursor-pointer" do %>
       Confirmar
     <% end %>
     <%= link_to "Editar", edit_invoice_path(invoice),
-        class: "px-4 py-1.5 rounded text-sm text-gray-600 border hover:bg-gray-50 transition-colors" %>
+        class: "px-4 py-1.5 rounded text-sm text-brand-navy border border-brand-navy/25 hover:bg-brand-muted transition-colors" %>
     <%= button_to invoice_path(invoice, return_to: "review"), method: :delete,
         data: { turbo_confirm: "¿Descartar esta factura pendiente?" },
         class: "px-3 py-1.5 rounded text-sm text-red-400 hover:text-red-600 hover:bg-red-50 border-0 bg-transparent cursor-pointer" do %>

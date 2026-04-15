@@ -9,18 +9,18 @@ export default class extends Controller {
 
   onDragOver(event) {
     event.preventDefault()
-    this.dropzoneTarget.classList.add("bg-blue-100", "border-blue-500")
+    this.dropzoneTarget.classList.add("bg-brand-teal-soft", "border-brand-teal")
   }
 
   onDragLeave(event) {
     if (!this.dropzoneTarget.contains(event.relatedTarget)) {
-      this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+      this.dropzoneTarget.classList.remove("bg-brand-teal-soft", "border-brand-teal")
     }
   }
 
   onDrop(event) {
     event.preventDefault()
-    this.dropzoneTarget.classList.remove("bg-blue-100", "border-blue-500")
+    this.dropzoneTarget.classList.remove("bg-brand-teal-soft", "border-brand-teal")
     this.uploadFiles(event.dataTransfer.files)
   }
 
@@ -86,7 +86,7 @@ export default class extends Controller {
     row.id = `optimistic_${CSS.escape(filename)}`
     row.className = "flex items-center gap-3 px-4 py-2 text-sm bg-white rounded-lg border"
     row.innerHTML = `
-      <svg class="w-4 h-4 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-brand-teal animate-spin" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
       </svg>

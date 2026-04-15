@@ -5,7 +5,7 @@
 <% end %>
 
 <div class="mb-6">
-  <h1 class="text-2xl font-bold text-gray-800">Datos de facturación</h1>
+  <h1 class="text-2xl font-bold text-brand-navy">Datos de facturación</h1>
   <p class="text-sm text-gray-500 mt-1">Se usan como emisor en facturas emitidas y en el PDF. El correo de la cuenta sigue siendo <%= @user.email %> si no indicas otro de contacto.</p>
 </div>
 
@@ -99,6 +99,6 @@
       </div>
     </section>
 
-    <%= f.submit "Guardar", class: "bg-blue-600 text-white px-5 py-2 rounded text-sm font-medium cursor-pointer" %>
+    <%= f.submit "Guardar", class: "bg-brand-teal text-white px-5 py-2 rounded text-sm font-medium cursor-pointer hover:bg-brand-teal-dark" %>
   <% end %>
 </div>

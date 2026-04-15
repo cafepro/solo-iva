@@ -2,14 +2,14 @@
 
 <div class="flex items-center justify-between mb-6">
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">Modelo 303</h1>
+    <h1 class="text-2xl font-bold text-brand-navy">Modelo 303</h1>
     <p class="text-sm text-gray-500"><%= @year %> — Trimestre <%= @quarter %> · Casillas según instrucciones AEAT 2026 (régimen general)</p>
   </div>
   <div class="flex gap-2 flex-wrap">
     <% [Date.today.year, Date.today.year - 1].each do |y| %>
       <% [1, 2, 3, 4].each do |q| %>
         <%= link_to "#{y} T#{q}", modelo303_reports_path(year: y, quarter: q),
-            class: "text-xs px-2 py-1 rounded #{@year == y && @quarter == q ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-100'}" %>
+            class: "text-xs px-2 py-1 rounded #{@year == y && @quarter == q ? 'bg-brand-teal text-white shadow-sm' : 'bg-white border border-gray-200 text-brand-navy/80 hover:bg-brand-muted hover:border-brand-navy/25'}" %>
       <% end %>
     <% end %>
   </div>
@@ -19,12 +19,12 @@
 
   <%# IVA DEVENGADO — orden y numeración como modelo en línea 2026 %>
   <div class="bg-white rounded-lg border overflow-hidden">
-    <div class="bg-emerald-700 text-white px-4 py-3">
+    <div class="bg-brand-navy text-white px-4 py-3">
       <h2 class="font-semibold text-sm uppercase tracking-wide">IVA devengado — Régimen general</h2>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm min-w-[32rem]">
-        <thead class="bg-gray-50 text-gray-500 text-xs">
+        <thead class="bg-brand-muted text-brand-navy/75 text-xs">
           <tr>
             <th class="px-3 py-2 text-left">Casilla</th>
             <th class="px-3 py-2 text-left">Concepto</th>
@@ -36,17 +36,17 @@
             <td colspan="3" class="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Tipo 4 %</td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">01</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">01</td>
             <td class="px-3 py-2 text-gray-600">Base imponible</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_01] %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">02</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">02</td>
             <td class="px-3 py-2 text-gray-600">Tipo %</td>
             <td class="px-3 py-2 text-right"><%= render "reports/modelo303_tipo_cell", rate: 4 %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">03</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">03</td>
             <td class="px-3 py-2 text-gray-600">Cuota</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_03] %></td>
           </tr>
@@ -55,17 +55,17 @@
             <td colspan="3" class="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Tipo 10 %</td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">04</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">04</td>
             <td class="px-3 py-2 text-gray-600">Base imponible</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_04] %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">05</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">05</td>
             <td class="px-3 py-2 text-gray-600">Tipo %</td>
             <td class="px-3 py-2 text-right"><%= render "reports/modelo303_tipo_cell", rate: 10 %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">06</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">06</td>
             <td class="px-3 py-2 text-gray-600">Cuota</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_06] %></td>
           </tr>
@@ -74,17 +74,17 @@
             <td colspan="3" class="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Tipo 21 %</td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">07</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">07</td>
             <td class="px-3 py-2 text-gray-600">Base imponible</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_07] %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">08</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">08</td>
             <td class="px-3 py-2 text-gray-600">Tipo %</td>
             <td class="px-3 py-2 text-right"><%= render "reports/modelo303_tipo_cell", rate: 21 %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">09</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">09</td>
             <td class="px-3 py-2 text-gray-600">Cuota</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_09] %></td>
           </tr>
@@ -93,25 +93,25 @@
             <td colspan="3" class="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Tipo 0 %</td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">150</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">150</td>
             <td class="px-3 py-2 text-gray-600">Base imponible</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_150] %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">151</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">151</td>
             <td class="px-3 py-2 text-gray-600">Tipo %</td>
             <td class="px-3 py-2 text-right"><%= render "reports/modelo303_tipo_cell", rate: 0 %></td>
           </tr>
           <tr class="hover:bg-gray-50">
-            <td class="px-3 py-2 font-mono text-emerald-800 font-bold">152</td>
+            <td class="px-3 py-2 font-mono text-brand-navy font-bold">152</td>
             <td class="px-3 py-2 text-gray-600">Cuota</td>
             <td class="px-3 py-2 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_152] %></td>
           </tr>
 
-          <tr class="bg-emerald-50 font-bold">
-            <td class="px-3 py-3 font-mono text-emerald-900">27</td>
-            <td class="px-3 py-3 text-emerald-900">Total cuota devengada (aplicación: suma de cuotas del apartado que correspondan)</td>
-            <td class="px-3 py-3 text-right text-emerald-900"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_27] %></td>
+          <tr class="bg-brand-muted/80 font-bold">
+            <td class="px-3 py-3 font-mono text-brand-navy">27</td>
+            <td class="px-3 py-3 text-brand-navy">Total cuota devengada (aplicación: suma de cuotas del apartado que correspondan)</td>
+            <td class="px-3 py-3 text-right text-brand-navy"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_27] %></td>
           </tr>
         </tbody>
       </table>
@@ -121,13 +121,13 @@
     </p>
   </div>
 
-  <%# IVA DEDUCIBLE %>
+  <%# IVA DEDUCIBLE — cabecera en teal (devengado va en navy) %>
   <div class="bg-white rounded-lg border overflow-hidden">
-    <div class="bg-emerald-700 text-white px-4 py-3">
+    <div class="bg-brand-teal text-white px-4 py-3 shadow-sm">
       <h2 class="font-semibold text-sm uppercase tracking-wide">IVA deducible — Operaciones interiores corrientes</h2>
     </div>
     <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs">
+      <thead class="bg-brand-muted text-brand-navy/75 text-xs">
         <tr>
           <th class="px-4 py-2 text-left">Casilla</th>
           <th class="px-4 py-2 text-left">Descripción</th>
@@ -136,27 +136,27 @@
       </thead>
       <tbody class="divide-y divide-gray-100">
         <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-mono text-emerald-800 font-bold">28</td>
+          <td class="px-4 py-3 font-mono text-brand-navy font-bold">28</td>
           <td class="px-4 py-3 text-gray-600">Base imponible</td>
           <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_28] %></td>
         </tr>
         <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-mono text-emerald-800 font-bold">29</td>
+          <td class="px-4 py-3 font-mono text-brand-navy font-bold">29</td>
           <td class="px-4 py-3 text-gray-600">Cuota</td>
           <td class="px-4 py-3 text-right font-medium"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_29] %></td>
         </tr>
-        <tr class="bg-emerald-50 font-bold">
-          <td class="px-4 py-3 font-mono text-emerald-900">45</td>
-          <td class="px-4 py-3 text-emerald-900">Total a deducir (en la app: mismas compras que 28–29)</td>
-          <td class="px-4 py-3 text-right text-emerald-900"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_45] %></td>
+        <tr class="bg-brand-muted/80 font-bold">
+          <td class="px-4 py-3 font-mono text-brand-navy">45</td>
+          <td class="px-4 py-3 text-brand-navy">Total a deducir (en la app: mismas compras que 28–29)</td>
+          <td class="px-4 py-3 text-right text-brand-navy"><%= render "reports/modelo303_amount_cell", amount: @report[:casilla_45] %></td>
         </tr>
       </tbody>
     </table>
 
     <%# RESULTADO %>
     <div class="border-t-2 border-gray-200">
-      <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
-        <p class="text-xs text-gray-600">
+      <div class="px-4 py-3 bg-brand-muted/60 border-b border-gray-100">
+        <p class="text-xs text-brand-navy/80">
           <span class="font-mono font-semibold">46</span> Resultado régimen general (27 − 45):
           <span class="font-mono tabular-nums font-medium text-gray-900"><%= number_to_currency(@report[:casilla_46], unit: "€", separator: ",", delimiter: ".") %></span>
         </p>
@@ -173,14 +173,9 @@
               <p class="text-2xl font-bold tabular-nums <%= @report[:casilla_64] >= 0 ? 'text-red-600' : 'text-green-600' %>">
                 <%= number_to_currency(@report[:casilla_64], unit: "€", separator: ",", delimiter: ".") %>
               </p>
-              <button type="button"
-                      class="shrink-0 rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      data-controller="clipboard-copy"
-                      data-clipboard-copy-text-value="<%= modelo303_copy_value(@report[:casilla_64]) %>"
-                      data-action="clipboard-copy#copy"
-                      title="Copiar importe con formato español (miles con punto, decimales con coma)">
-                Copiar
-              </button>
+              <%= render "shared/clipboard_copy_icon_button",
+                    copy_value: modelo303_copy_value(@report[:casilla_64]),
+                    title: "Copiar importe con formato español (miles con punto, decimales con coma)" %>
             </div>
             <p class="text-xs text-gray-500 mt-1"><%= @report[:casilla_64] >= 0 ? "A ingresar en Hacienda" : "A devolver / compensar" %></p>
           </div>
@@ -191,10 +186,10 @@
 </div>
 
 <div class="mt-6 text-center">
-  <%= link_to invoices_path(invoice_type: "emitida", year: @year, quarter: @quarter), class: "text-sm text-blue-600 hover:underline mr-4" do %>
+  <%= link_to invoices_path(invoice_type: "emitida", year: @year, quarter: @quarter), class: "text-sm text-brand-navy hover:text-brand-teal hover:underline mr-4" do %>
     Ver facturas emitidas de este trimestre
   <% end %>
-  <%= link_to invoices_path(invoice_type: "recibida", year: @year, quarter: @quarter), class: "text-sm text-orange-600 hover:underline" do %>
+  <%= link_to invoices_path(invoice_type: "recibida", year: @year, quarter: @quarter), class: "text-sm text-brand-teal-dark hover:text-brand-navy hover:underline" do %>
     Ver facturas recibidas de este trimestre
   <% end %>
 </div>

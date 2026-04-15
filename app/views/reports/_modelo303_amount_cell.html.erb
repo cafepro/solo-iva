@@ -1,11 +1,6 @@
-<div class="flex items-center justify-end gap-2">
+<div class="flex items-center justify-end gap-1.5">
   <span class="tabular-nums"><%= number_to_currency(amount, unit: "€", separator: ",", delimiter: ".") %></span>
-  <button type="button"
-          class="shrink-0 rounded border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          data-controller="clipboard-copy"
-          data-clipboard-copy-text-value="<%= modelo303_copy_value(amount) %>"
-          data-action="clipboard-copy#copy"
-          title="Copiar importe con formato español (miles con punto, decimales con coma)">
-    Copiar
-  </button>
+  <%= render "shared/clipboard_copy_icon_button",
+        copy_value: modelo303_copy_value(amount),
+        title: "Copiar importe con formato español (miles con punto, decimales con coma)" %>
 </div>

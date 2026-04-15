@@ -1,7 +1,7 @@
 <% content_for :title, "Google Drive — SoloIVA" %>
 
 <div class="mb-6">
-  <h1 class="text-2xl font-bold text-gray-800">Google Drive</h1>
+  <h1 class="text-2xl font-bold text-brand-navy">Google Drive</h1>
   <p class="text-sm text-gray-500 mt-1">
     Las facturas <strong>recibidas</strong> y <strong>emitidas</strong> confirmadas se guardan bajo
     <span class="font-mono text-gray-700">Mi unidad → [carpeta 1] → [subcarpeta] → año → mes</span>.
@@ -27,11 +27,11 @@
   <div class="flex flex-wrap gap-3">
     <% if current_user.google_drive_refresh_token.blank? %>
       <%= link_to "Conectar con Google", authorize_google_drive_settings_path,
-          class: "inline-flex items-center px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" %>
+          class: "inline-flex items-center px-4 py-2 rounded bg-brand-teal text-white text-sm font-medium hover:bg-brand-teal-dark" %>
     <% else %>
       <%= button_to "Desconectar", disconnect_google_drive_settings_path, method: :delete,
           form: { data: { turbo_confirm: "¿Dejar de subir facturas a Drive?" } },
-          class: "inline-flex items-center px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50" %>
+          class: "inline-flex items-center px-4 py-2 rounded border border-brand-navy/25 text-sm text-brand-navy hover:bg-brand-muted" %>
     <% end %>
   </div>
 
