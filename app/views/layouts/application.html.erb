@@ -49,6 +49,8 @@
             <% end %>
           </div>
           <div class="flex-1 overflow-y-auto overscroll-contain px-2 py-4">
+            <%= turbo_stream_from "pending_badge_#{current_user.id}_emitida" %>
+            <%= turbo_stream_from "pending_badge_#{current_user.id}_recibida" %>
             <%= render "layouts/sidebar_nav" %>
           </div>
           <div class="shrink-0 space-y-2 border-t border-white/10 p-4">

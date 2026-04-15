@@ -7,13 +7,14 @@ class PdfUploadsController < ApplicationController
     # (invoices already created are unchanged). This avoids 422 when the UI is stale behind
     # Turbo Streams / Action Cable.
     id = upload.id
+    invoice_type = upload.invoice_type
     upload.destroy!
 
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: turbo_stream.remove("pdf_upload_#{id}")
       end
-      format.html { redirect_to review_invoices_path, notice: "Subida descartada." }
+      format.html { redirect_to review_invoices_path(invoice_type: invoice_type), notice: "Subida descartada." }
     end
   end
 end

@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // Live status updates arrive via Turbo Streams — no polling needed.
 export default class extends Controller {
   static targets = ["dropzone", "fileInput"]
-  static values  = { url: String }
+  static values  = { url: String, invoiceType: { type: String, default: "recibida" } }
 
   onDragOver(event) {
     event.preventDefault()
@@ -41,6 +41,7 @@ export default class extends Controller {
 
       const formData = new FormData()
       formData.append("pdfs[]", file)
+      formData.append("invoice_type", this.invoiceTypeValue)
       formData.append("authenticity_token", csrfToken)
 
       const queue = document.getElementById("upload_queue")

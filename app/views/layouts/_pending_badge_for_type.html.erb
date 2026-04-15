@@ -1,0 +1,29 @@
+<%# locals: invoice_type ("emitida" | "recibida"), count (Integer) %>
+<% review_url = review_invoices_path(invoice_type: invoice_type) %>
+<% sub_link = "flex w-full min-w-0 items-center gap-2 rounded-md py-1.5 pl-1 pr-2 text-sm text-white/75 transition-colors hover:bg-white/10 hover:text-white" %>
+<% upload_icon = capture do %>
+  <svg class="h-4 w-4 shrink-0 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+  </svg>
+<% end %>
+<turbo-frame id="pending_badge_<%= invoice_type %>">
+  <% if count > 0 %>
+    <%= link_to review_url,
+        class: sub_link,
+        data: { turbo_frame: "_top", action: "click->sidebar-nav#close" },
+        title: "Subir y revisar facturas pendientes (#{invoice_type == 'emitida' ? 'emitidas' : 'recibidas'})" do %>
+      <%= upload_icon %>
+      <span class="min-w-0 flex-1 truncate">Subir facturas</span>
+      <span class="inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white"><%= count %></span>
+    <% end %>
+  <% else %>
+    <%= link_to review_url,
+        class: sub_link,
+        data: { turbo_frame: "_top", action: "click->sidebar-nav#close" },
+        title: "Subir facturas #{invoice_type == 'emitida' ? 'emitidas' : 'recibidas'}" do %>
+      <%= upload_icon %>
+      <span>Subir facturas</span>
+    <% end %>
+  <% end %>
+</turbo-frame>

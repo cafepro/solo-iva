@@ -9,4 +9,8 @@ module ApplicationHelper
       t.presence || "SoloIVA"
     end
   end
+
+  def pending_review_count_for(user, invoice_type)
+    user.invoices.pending_review.where(invoice_type: invoice_type).count
+  end
 end

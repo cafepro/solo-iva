@@ -4,8 +4,14 @@ class InvoicesController < ApplicationController
   SORTABLE_COLUMNS = %w[invoice_number invoice_date invoice_type].freeze
 
   def review
-    @pending = current_user.invoices.pending_review.includes(:invoice_lines).order(:created_at)
-    @uploads = current_user.pdf_uploads.where(status: %w[pending processing]).order(:created_at)
+    @invoice_type = params[:invoice_type].presence_in(%w[emitida recibida]) || "recibida"
+    @pending = current_user.invoices.pending_review
+      .where(invoice_type: @invoice_type)
+      .includes(:invoice_lines)
+      .order(:created_at)
+    @uploads = current_user.pdf_uploads
+      .where(status: %w[pending processing], invoice_type: @invoice_type)
+      .order(:created_at)
   end
 
   def upload_pdfs
@@ -14,35 +20,31 @@ class InvoicesController < ApplicationController
   end
 
   def confirm
-    result    = ConfirmInvoice.new(invoice: @invoice).call
-    pending_count = current_user.invoices.pending_review.count
+    result = ConfirmInvoice.new(invoice: @invoice).call
+    inv    = result[:invoice]
 
     respond_to do |format|
       format.turbo_stream do
         if result[:ok]
-          render turbo_stream: [
-            turbo_stream.remove("pending_invoice_#{@invoice.id}"),
-            turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
-          ]
+          render turbo_stream: confirm_success_turbo_streams(inv)
         else
           render turbo_stream: [
             turbo_stream.replace(
-              "pending_invoice_#{@invoice.id}",
+              "pending_invoice_#{inv.id}",
               partial: "invoices/pending_invoice_card",
               locals:  {
-                invoice:       result[:invoice],
-                confirm_error: result[:invoice].errors.full_messages.to_sentence
+                invoice:       inv,
+                confirm_error: inv.errors.full_messages.to_sentence
               }
-            ),
-            turbo_stream.replace("pending_badge", partial: "layouts/pending_badge", locals: { count: pending_count })
+            )
           ], status: :unprocessable_entity
         end
       end
       format.html do
         if result[:ok]
-          redirect_to review_invoices_path, notice: "Factura confirmada."
+          redirect_to review_invoices_path(invoice_type: inv.invoice_type), notice: "Factura confirmada."
         else
-          redirect_to review_invoices_path, alert: result[:invoice].errors.full_messages.to_sentence
+          redirect_to review_invoices_path(invoice_type: inv.invoice_type), alert: inv.errors.full_messages.to_sentence
         end
       end
     end
@@ -122,11 +124,11 @@ class InvoicesController < ApplicationController
 
     if result[:ok]
       notice = if @invoice.reload.pending?
-        "Factura guardada. Sigue en «Revisión» hasta que la confirmes."
+        "Factura guardada. Sigue en «Subir facturas» hasta que la confirmes."
       else
         "Factura actualizada correctamente."
       end
-      path = @invoice.pending? ? review_invoices_path : invoices_path
+      path = @invoice.pending? ? review_invoices_path(invoice_type: @invoice.invoice_type) : invoices_path
       redirect_to path, notice: notice
     else
       load_invoice_form_collections
@@ -136,11 +138,12 @@ class InvoicesController < ApplicationController
   end
 
   def destroy
+    invoice_type_for_review = @invoice.invoice_type
     DestroyInvoice.new(invoice: @invoice).call
 
     case params[:return_to]
     when "review"
-      redirect_to review_invoices_path, notice: "Factura eliminada."
+      redirect_to review_invoices_path(invoice_type: invoice_type_for_review), notice: "Factura eliminada."
     else
       path = invoices_path(
         { invoice_type: params[:invoice_type], year: params[:year], quarter: params[:quarter],
@@ -214,6 +217,34 @@ class InvoicesController < ApplicationController
 
   private
 
+  def confirm_success_turbo_streams(invoice)
+    user = current_user
+    t    = invoice.invoice_type
+    pending_for_type = user.invoices.pending_review.where(invoice_type: t).includes(:invoice_lines).order(:created_at)
+    streams = [
+      turbo_stream.remove("pending_invoice_#{invoice.id}"),
+      replace_pending_badge_turbo(user, :emitida),
+      replace_pending_badge_turbo(user, :recibida),
+      turbo_stream.replace(
+        "pending_invoices_#{t}",
+        partial: "invoices/pending_invoices_panel",
+        locals:  { invoices: pending_for_type, invoice_type: t.to_s }
+      )
+    ]
+    streams
+  end
+
+  def replace_pending_badge_turbo(user, type)
+    turbo_stream.replace(
+      "pending_badge_#{type}",
+      partial: "layouts/pending_badge_for_type",
+      locals:  {
+        invoice_type: type.to_s,
+        count:        user.invoices.pending_review.where(invoice_type: type).count
+      }
+    )
+  end
+
   def load_invoice_form_collections
     @clients = current_user.clients.order(:name)
     @service_templates = current_user.service_templates.order(:name)
@@ -248,7 +279,8 @@ class InvoicesController < ApplicationController
   end
 
   def build_pdf_upload_payload(file)
-    upload = CreatePdfUpload.new(user: current_user, file: file).call
+    invoice_type = params[:invoice_type].presence_in(%w[emitida recibida])&.to_sym || :recibida
+    upload = CreatePdfUpload.new(user: current_user, file: file, invoice_type: invoice_type).call
     {
       id:       upload.id,
       filename: upload.filename,
