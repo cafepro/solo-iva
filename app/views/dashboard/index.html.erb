@@ -1,8 +1,7 @@
 <% content_for :title, "Dashboard — SoloIVA" %>
 
-<div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold text-brand-navy">Dashboard</h1>
-  <div class="flex gap-2 flex-wrap">
+<div class="mb-6 flex flex-wrap items-center justify-end gap-2">
+  <div class="flex flex-wrap gap-2">
     <% [Date.today.year, Date.today.year - 1].each do |y| %>
       <% [1, 2, 3, 4].each do |q| %>
         <%= link_to "#{y} T#{q}", dashboard_path(year: y, quarter: q),

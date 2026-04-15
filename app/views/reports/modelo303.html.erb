@@ -1,11 +1,8 @@
 <% content_for :title, "Modelo 303 — SoloIVA" %>
 
-<div class="flex items-center justify-between mb-6">
-  <div>
-    <h1 class="text-2xl font-bold text-brand-navy">Modelo 303</h1>
-    <p class="text-sm text-gray-500"><%= @year %> — Trimestre <%= @quarter %> · Casillas según instrucciones AEAT 2026 (régimen general)</p>
-  </div>
-  <div class="flex gap-2 flex-wrap">
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <p class="text-sm text-gray-500"><%= @year %> — Trimestre <%= @quarter %> · Casillas según instrucciones AEAT 2026 (régimen general)</p>
+  <div class="flex flex-wrap gap-2">
     <% [Date.today.year, Date.today.year - 1].each do |y| %>
       <% [1, 2, 3, 4].each do |q| %>
         <%= link_to "#{y} T#{q}", modelo303_reports_path(year: y, quarter: q),

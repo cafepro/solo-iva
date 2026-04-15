@@ -1,0 +1,36 @@
+<%# Navegación vertical — opción B %>
+<% nav_link = "block rounded-md px-3 py-2 text-sm text-white/90 transition-colors hover:bg-white/10 hover:text-white" %>
+
+<div class="space-y-6">
+  <div>
+    <p class="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">Movimientos</p>
+    <nav class="flex flex-col gap-0.5">
+      <%= link_to "Facturas emitidas", invoices_path(invoice_type: "emitida"), class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+      <%= link_to "Facturas recibidas", invoices_path(invoice_type: "recibida"), class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+      <%= render "layouts/pending_badge", count: current_user.invoices.pending_review.count %>
+    </nav>
+  </div>
+
+  <div>
+    <p class="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">Catálogo</p>
+    <nav class="flex flex-col gap-0.5">
+      <%= link_to "Clientes", clients_path, class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+      <%= link_to "Plantillas", service_templates_path, class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+    </nav>
+  </div>
+
+  <div>
+    <p class="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">Informes y obligaciones</p>
+    <nav class="flex flex-col gap-0.5">
+      <%= link_to "Modelo 303", modelo303_reports_path, class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+    </nav>
+  </div>
+
+  <div>
+    <p class="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">Cuenta y sistema</p>
+    <nav class="flex flex-col gap-0.5">
+      <%= link_to "Datos de facturación", billing_profile_path, class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+      <%= link_to "Google Drive", google_drive_settings_path, class: nav_link, data: { turbo_frame: "_top", action: "click->sidebar-nav#close" } %>
+    </nav>
+  </div>
+</div>

@@ -2,8 +2,7 @@
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
   <div>
-    <h1 class="text-2xl font-bold text-brand-navy">Factura <%= @invoice.invoice_number %></h1>
-    <p class="text-sm text-gray-500 mt-1"><%= @invoice.invoice_date&.strftime("%d/%m/%Y") %> · <%= @invoice.emitida? ? "Emitida" : "Recibida" %></p>
+    <p class="text-sm text-gray-500"><%= @invoice.invoice_date&.strftime("%d/%m/%Y") %> · <%= @invoice.emitida? ? "Emitida" : "Recibida" %></p>
   </div>
   <div class="flex flex-wrap gap-2">
     <% if @invoice.emitida? %>

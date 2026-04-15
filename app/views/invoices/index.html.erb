@@ -1,8 +1,7 @@
 <% content_for :title, "Facturas — SoloIVA" %>
 
 <div class="flex flex-col gap-4 mb-6">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-2xl font-bold text-brand-navy">Facturas</h1>
+  <div class="flex flex-wrap items-center justify-end gap-3">
     <div class="flex flex-wrap gap-2">
       <%= link_to "Todas", invoices_path(invoices_index_query.except("invoice_type")), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type].blank? ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-brand-navy/80 hover:bg-brand-muted hover:border-brand-navy/25'}" %>
       <%= link_to "Emitidas", invoices_path(invoices_index_query.merge("invoice_type" => "emitida")), class: "text-xs px-3 py-1.5 rounded #{params[:invoice_type] == 'emitida' ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-brand-navy/80 hover:bg-brand-muted hover:border-brand-navy/25'}" %>

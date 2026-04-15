@@ -1,10 +1,16 @@
 <turbo-frame id="pending_badge">
   <% if count > 0 %>
-    <%= link_to review_invoices_path, class: "relative inline-flex items-center", data: { turbo_frame: "_top" } do %>
-      <span class="text-sm text-white/85 hover:text-brand-teal transition-colors">Subir facturas</span>
-      <span class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"><%= count %></span>
+    <%= link_to review_invoices_path,
+        class: "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white/90 transition-colors hover:bg-white/10",
+        data: { turbo_frame: "_top", action: "click->sidebar-nav#close" },
+        title: "Subir y revisar facturas pendientes" do %>
+      <span>Revisión</span>
+      <span class="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white"><%= count %></span>
     <% end %>
   <% else %>
-    <%= link_to "Subir facturas", review_invoices_path, class: "text-sm text-white/85 hover:text-brand-teal transition-colors", data: { turbo_frame: "_top" } %>
+    <%= link_to "Revisión", review_invoices_path,
+        class: "block rounded-md px-3 py-2 text-sm text-white/90 transition-colors hover:bg-white/10",
+        data: { turbo_frame: "_top", action: "click->sidebar-nav#close" },
+        title: "Subir y revisar facturas pendientes" %>
   <% end %>
 </turbo-frame>
