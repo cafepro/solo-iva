@@ -96,9 +96,10 @@ test:
 production:
   primary: &primary_production
     <<: *default
+    host: <%= ENV["DB_HOST"].presence || "127.0.0.1" %>
     database: solo_iva_production
     username: solo_iva
-    password: <%= ENV["SOLO_IVA_DATABASE_PASSWORD"] %>
+    password: <%= ENV["POSTGRES_PASSWORD"].presence || ENV["SOLO_IVA_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: solo_iva_production_cache

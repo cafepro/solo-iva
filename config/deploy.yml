@@ -1,114 +1,74 @@
-# Name of your application. Used to uniquely configure containers.
+# Kamal deploy — SoloIVA (misma convención que Busca Pagitas / catastro_plus en el VPS).
+#
+# Sustituir la app anterior en el mismo servidor:
+#   1. En el repo de Busca Pagitas: `bin/kamal remove` (o `kamal remove`) para bajar proxy + web + volumen.
+#   2. Crea en Docker Hub la imagen `jorgecfmf/solo_iva` si aún no existe.
+#   3. En el servidor, PostgreSQL del accessory quedará en un volumen nuevo; si ya tenías Postgres
+#      en el host, puedes comentar el accessory y usar DB_HOST apuntando a ese servicio.
+#   4. Copia `.kamal/secrets` (o variables en el CI) con RAILS_MASTER_KEY, KAMAL_REGISTRY_PASSWORD,
+#      POSTGRES_PASSWORD (misma clave para el contenedor postgres y para Rails).
+#   5. Desde este repo: `bin/kamal setup` la primera vez, luego `bin/kamal deploy`.
+#
+# HTTP en el borde (mismo esquema que Busca Pagitas con proxy.ssl: false). Cuando pongas TLS,
+# activa ssl en proxy y RAILS_FORCE_SSL / RAILS_ASSUME_SSL a true.
+
 service: solo_iva
 
-# Name of the container image (use your-user/app-name on external registries).
-image: solo_iva
+image: jorgecfmf/solo_iva
 
-# Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+    - 213.165.78.57
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+proxy:
+  ssl: false
+  host: 213.165.78.57
+  app_port: 3000
 
-# Where you keep your container images.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  username: jorgecfmf
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
-  # Needed for authenticated registries.
-  # username: your-user
-
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
-
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
     - RAILS_MASTER_KEY
+    - POSTGRES_PASSWORD
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
+    RAILS_FORCE_SSL: false
+    RAILS_ASSUME_SSL: false
     SOLID_QUEUE_IN_PUMA: true
+    DB_HOST: solo_iva-db
+    # Evita ActionDispatch::HostAuthorization con el proxy por IP (ajusta si usas dominio).
+    RAILS_ALLOWED_HOSTS: 213.165.78.57
 
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
-
-    # Set number of cores available to the application on each server (default: 1).
-    # WEB_CONCURRENCY: 2
-
-    # Match this to any external database server to configure Active Record correctly
-    # Use solo_iva-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
-
-    # Log everything from Rails
-    # RAILS_LOG_LEVEL: debug
-
-# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal logs -r job" will tail logs from the first server in the job section.
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
-# hitting 404 on in-flight requests. Combines all files from new and old
-# version inside the asset_path.
+volumes:
+  - "solo_iva_storage:/rails/storage"
+
 asset_path: /rails/public/assets
 
-# Configure the image builder.
 builder:
   arch: amd64
 
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://docker@docker-builder-server
-  #
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: 3.3.8
-  # secrets:
-  #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
+ssh:
+  user: root
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
-
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+accessories:
+  db:
+    image: postgres:16-alpine
+    host: 213.165.78.57
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: solo_iva
+        POSTGRES_DB: solo_iva_production
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

@@ -1,8 +1,36 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
 
-# If running the rails server then create or migrate existing database
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
+# Jemalloc (imagen slim con libjemalloc)
+if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/local/lib/libjemalloc.so ]; then
+  export LD_PRELOAD=/usr/local/lib/libjemalloc.so
 fi
 
-exec "${@}"
+prepare_databases() {
+  ./bin/rails db:prepare
+}
+
+# Migraciones al arrancar web o workers (misma idea que Busca Pagitas).
+should_prepare=0
+prev=""
+for arg in "$@"; do
+  if [[ "$prev" == "./bin/rails" || "$prev" == "bin/rails" ]] && [[ "$arg" == "server" ]]; then
+    should_prepare=1
+    break
+  fi
+  prev="$arg"
+done
+if [[ "$should_prepare" -eq 0 ]]; then
+  for arg in "$@"; do
+    if [[ "$arg" == "./bin/jobs" || "$arg" == "bin/jobs" ]]; then
+      should_prepare=1
+      break
+    fi
+  done
+fi
+
+if [[ "$should_prepare" -eq 1 ]]; then
+  prepare_databases
+fi
+
+exec "$@"
