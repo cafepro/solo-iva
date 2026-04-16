@@ -15,7 +15,9 @@
   <%= form_with model: @user, url: ai_integrations_path, method: :patch, class: "space-y-8", data: { turbo: false } do |f| %>
     <%= render "shared/errors", object: @user %>
 
-    <section>
+    <section data-controller="ai-key-check"
+             data-ai-key-check-check-url-value="<%= check_ai_integrations_path %>"
+             data-ai-key-check-provider-value="gemini">
       <h2 class="text-sm font-semibold text-gray-800 mb-3">Google Gemini</h2>
       <p class="text-xs text-gray-500 mb-4">
         Usado en parte del flujo de visión y texto para interpretar facturas.
@@ -23,7 +25,8 @@
       <div>
         <%= f.label :gemini_api_key, "Clave API", class: "block text-xs font-medium text-gray-600 mb-1" %>
         <%= f.password_field :gemini_api_key, autocomplete: "off", placeholder: "Dejar vacío para no cambiar",
-              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" %>
+              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono",
+              data: { ai_key_check_target: "token" } %>
         <p class="mt-1 text-xs text-gray-500">
           <% if @user.gemini_api_key_configured? %>
             <span class="text-brand-teal-dark font-medium">Guardada.</span> Escribe una nueva solo si quieres sustituirla.
@@ -35,10 +38,21 @@
           <%= check_box_tag "user[remove_gemini_api_key]", "1", false, class: "h-4 w-4 rounded border-gray-300 text-brand-teal" %>
           <span>Eliminar mi clave de Gemini al guardar</span>
         </label>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+          <button type="button"
+                  data-action="ai-key-check#verify"
+                  class="shrink-0 inline-flex items-center px-3 py-1.5 rounded border border-brand-navy/25 text-sm text-brand-navy hover:bg-brand-muted cursor-pointer">
+            Comprobar clave
+          </button>
+          <p data-ai-key-check-target="message" class="text-xs text-gray-500 min-h-[1.25rem] flex-1" aria-live="polite"></p>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">Si el campo está vacío, se prueba la clave que ya tienes guardada.</p>
       </div>
     </section>
 
-    <section>
+    <section data-controller="ai-key-check"
+             data-ai-key-check-check-url-value="<%= check_ai_integrations_path %>"
+             data-ai-key-check-provider-value="groq">
       <h2 class="text-sm font-semibold text-gray-800 mb-3">Groq</h2>
       <p class="text-xs text-gray-500 mb-4">
         Modelos rápidos para extracción estructurada cuando corresponda en el pipeline.
@@ -46,7 +60,8 @@
       <div>
         <%= f.label :groq_api_key, "Clave API", class: "block text-xs font-medium text-gray-600 mb-1" %>
         <%= f.password_field :groq_api_key, autocomplete: "off", placeholder: "Dejar vacío para no cambiar",
-              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" %>
+              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono",
+              data: { ai_key_check_target: "token" } %>
         <p class="mt-1 text-xs text-gray-500">
           <% if @user.groq_api_key_configured? %>
             <span class="text-brand-teal-dark font-medium">Guardada.</span> Escribe una nueva solo si quieres sustituirla.
@@ -58,6 +73,15 @@
           <%= check_box_tag "user[remove_groq_api_key]", "1", false, class: "h-4 w-4 rounded border-gray-300 text-brand-teal" %>
           <span>Eliminar mi clave de Groq al guardar</span>
         </label>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+          <button type="button"
+                  data-action="ai-key-check#verify"
+                  class="shrink-0 inline-flex items-center px-3 py-1.5 rounded border border-brand-navy/25 text-sm text-brand-navy hover:bg-brand-muted cursor-pointer">
+            Comprobar clave
+          </button>
+          <p data-ai-key-check-target="message" class="text-xs text-gray-500 min-h-[1.25rem] flex-1" aria-live="polite"></p>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">Si el campo está vacío, se prueba la clave que ya tienes guardada.</p>
       </div>
     </section>
 

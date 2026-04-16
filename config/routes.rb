@@ -26,7 +26,9 @@ Rails.application.routes.draw do
 
     resource :billing_profile, only: %i[show update]
 
-    resource :ai_integrations, only: %i[show update], controller: "ai_integrations"
+    resource :ai_integrations, only: %i[show update], controller: "ai_integrations" do
+      post :check, on: :collection
+    end
 
     resources :pdf_uploads, only: :destroy
 
