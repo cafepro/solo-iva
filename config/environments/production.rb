@@ -63,6 +63,10 @@ Rails.application.configure do
     config.hosts << host
   end
 
+  # Kamal-proxy hace el health check contra el contenedor con Host tipo "abc12def3456:3000", no la IP
+  # pública; sin esto ActionDispatch::HostAuthorization bloquea y el deploy nunca pasa a "healthy".
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
   # Full URLs for mailers / OAuth callback hints when generating outside a request.
   if ENV["APP_HOST"].present?
     config.action_controller.default_url_options = {
