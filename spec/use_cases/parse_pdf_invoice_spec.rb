@@ -20,7 +20,6 @@ RSpec.describe ParsePdfInvoice do
       end
 
       before do
-        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
         allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_results)
       end
 
@@ -44,7 +43,6 @@ RSpec.describe ParsePdfInvoice do
       end
 
       before do
-        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
         allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return(gemini_results)
       end
 
@@ -67,7 +65,6 @@ RSpec.describe ParsePdfInvoice do
       end
 
       before do
-        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
         allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_return([])
         allow_any_instance_of(Pdf::GroqExtractor).to receive(:extract).and_return(groq_results)
       end
@@ -79,19 +76,6 @@ RSpec.describe ParsePdfInvoice do
     end
 
     context "when no Gemini or Groq API key is configured" do
-      around do |example|
-        was_groq = ENV.fetch("GROQ_API_KEY", nil)
-        ENV.delete("GROQ_API_KEY")
-        example.run
-      ensure
-        ENV["GROQ_API_KEY"] = was_groq if was_groq
-      end
-
-      before do
-        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return(nil)
-        allow(Rails.application.credentials).to receive(:groq_api_key).and_return(nil)
-      end
-
       it "falls back to heuristics (empty when text does not match patterns)" do
         results = described_class.new(source).call
         expect(results).to eq([])
@@ -100,7 +84,6 @@ RSpec.describe ParsePdfInvoice do
 
     context "when an unexpected error occurs" do
       before do
-        allow(Rails.application.credentials).to receive(:gemini_api_key).and_return("fake-key")
         allow_any_instance_of(Pdf::GeminiExtractor).to receive(:extract).and_raise(RuntimeError, "boom")
       end
 

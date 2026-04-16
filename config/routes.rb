@@ -26,6 +26,8 @@ Rails.application.routes.draw do
 
     resource :billing_profile, only: %i[show update]
 
+    resource :ai_integrations, only: %i[show update], controller: "ai_integrations"
+
     resources :pdf_uploads, only: :destroy
 
     resources :reports, only: [] do

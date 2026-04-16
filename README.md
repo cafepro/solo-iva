@@ -66,24 +66,13 @@ bundle exec rubocop
 
 ---
 
-## Configuration: AI keys
+## Configuration: AI keys (per user)
 
 Invoice extraction uses **Google Gemini** (Generative Language API) and **Groq** (OpenAI-compatible chat; **multimodal** for images).
 
-Add keys to **encrypted credentials**:
+Each signed-in user adds their own API keys in the app: **Integraciones con IA** (stored encrypted on the `users` table). There is **no** server-wide `gemini_api_key` / `groq_api_key` in credentials or environment for extraction.
 
-```bash
-bin/rails credentials:edit
-```
-
-| Credential | Purpose |
-| --- | --- |
-| `gemini_api_key` | [Google AI Studio](https://aistudio.google.com/apikey) |
-| `groq_api_key` | [Groq Console](https://console.groq.com/keys) |
-
-**Optional:** set `GROQ_API_KEY` in the environment for local dev; it is used when `groq_api_key` is missing from credentials.
-
-Without keys, PDF text extraction may still run, but **LLM steps are skipped** and results depend on **heuristics** (PDFs with poor or no text will often yield nothing). **Images** require vision APIs.
+Without keys, PDF text extraction may still run, but **LLM steps are skipped** and results depend on **heuristics** (PDFs with poor or no text will often yield nothing). **Images** require vision APIs and a configured key for the provider used in the pipeline.
 
 ---
 

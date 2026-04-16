@@ -6,7 +6,9 @@ class BillingProfilesController < ApplicationController
 
   def update
     @user = current_user
-    if @user.update(billing_profile_params)
+    @user.assign_attributes(billing_profile_params)
+
+    if @user.save
       redirect_to billing_profile_path, notice: "Datos de facturación y numeración guardados."
     else
       render :show, status: :unprocessable_entity

@@ -20,7 +20,7 @@ class ProcessPdfUploadJob < ApplicationJob
 
     return unless PdfUpload.exists?(id: pdf_upload_id)
 
-    results = ParseInvoiceDocument.new(StringIO.new(file_data), filename: upload.filename).call
+    results = ParseInvoiceDocument.new(StringIO.new(file_data), filename: upload.filename, user: user).call
 
     return unless PdfUpload.exists?(id: pdf_upload_id)
 

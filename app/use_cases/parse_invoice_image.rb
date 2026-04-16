@@ -1,8 +1,9 @@
 # Runs vision-only extraction (Gemini then Groq) on a raster image of an invoice.
 class ParseInvoiceImage
-  def initialize(image_bytes, filename:)
+  def initialize(image_bytes, filename:, user: nil)
     @bytes    = image_bytes.to_s.b
     @filename = filename.to_s
+    @user     = user
   end
 
   def call
@@ -12,8 +13,8 @@ class ParseInvoiceImage
       return []
     end
 
-    results = Pdf::GeminiVisionExtractor.new(@bytes, mime_type: mime).extract
-    results = Pdf::GroqVisionExtractor.new(@bytes, mime_type: mime).extract if results.empty?
+    results = Pdf::GeminiVisionExtractor.new(@bytes, mime_type: mime, user: @user).extract
+    results = Pdf::GroqVisionExtractor.new(@bytes, mime_type: mime, user: @user).extract if results.empty?
     results
   end
 end

@@ -1,8 +1,9 @@
 class ParsePdfInvoice
   class ParseError < StandardError; end
 
-  def initialize(source)
+  def initialize(source, user: nil)
     @source = source
+    @user   = user
   end
 
   # Returns an array of PdfExtractionResult (one per invoice found in the PDF).
@@ -10,8 +11,8 @@ class ParsePdfInvoice
   def call
     text = extract_text
 
-    results = Pdf::GeminiExtractor.new(text).extract
-    results = Pdf::GroqExtractor.new(text).extract if results.empty?
+    results = Pdf::GeminiExtractor.new(text, user: @user).extract
+    results = Pdf::GroqExtractor.new(text, user: @user).extract if results.empty?
 
     results = Pdf::HeuristicInvoiceExtractor.new(text).extract if results.empty?
 
@@ -24,7 +25,7 @@ class ParsePdfInvoice
 
   private
 
-  attr_reader :source
+  attr_reader :source, :user
 
   def extract_text
     source.rewind if source.respond_to?(:rewind)

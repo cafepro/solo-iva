@@ -185,7 +185,8 @@ class InvoicesController < ApplicationController
 
     results = ParseInvoiceDocument.new(
       StringIO.new(raw),
-      filename: uploaded.original_filename
+      filename: uploaded.original_filename,
+      user:     current_user
     ).call
 
     stash_token = InvoiceUploadStash.store!(
@@ -207,7 +208,7 @@ class InvoicesController < ApplicationController
       payload[:extraction_note] =
         "No se extrajo ninguna factura. Suele deberse a límites de cuota de las APIs (429), " \
         "a un PDF sin texto seleccionable, a una foto borrosa o con poca luz, o a un formato no soportado. " \
-        "Prueba más tarde o revisa las claves en credentials (Gemini / Groq)."
+        "Prueba más tarde o configura tus claves en Integraciones con IA (Gemini / Groq)."
     end
 
     render json: payload

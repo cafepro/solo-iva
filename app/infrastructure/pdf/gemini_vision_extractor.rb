@@ -3,9 +3,10 @@ module Pdf
   class GeminiVisionExtractor
     MODEL_CHAIN = GeminiExtractor::MODEL_CHAIN
 
-    def initialize(image_bytes, mime_type:, client: nil)
+    def initialize(image_bytes, mime_type:, user: nil, client: nil)
       @bytes           = image_bytes.to_s.b
       @mime_type       = mime_type
+      @user            = user
       @client_override = client
     end
 
@@ -16,7 +17,7 @@ module Pdf
         return run_with_client(@client_override, parts)
       end
 
-      key = gemini_api_key
+      key = Pdf::AiCredentials.gemini_api_key_for(@user)
       return [] if key.blank?
 
       MODEL_CHAIN.each do |model|
@@ -42,12 +43,6 @@ module Pdf
         { text: InvoiceExtractionPrompt.for_vision },
         { inline_data: { mime_type: @mime_type, data: b64 } }
       ]
-    end
-
-    def gemini_api_key
-      Rails.application.credentials.gemini_api_key
-    rescue NoMethodError
-      nil
     end
 
     def run_with_client(client, parts)

@@ -3,9 +3,10 @@ module Pdf
   class GroqVisionExtractor
     MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
-    def initialize(image_bytes, mime_type:, client: nil)
+    def initialize(image_bytes, mime_type:, user: nil, client: nil)
       @bytes           = image_bytes.to_s.b
       @mime_type       = mime_type
+      @user            = user
       @client_override = client
     end
 
@@ -16,7 +17,7 @@ module Pdf
         return run_with_client(@client_override, parts)
       end
 
-      key = groq_api_key
+      key = Pdf::AiCredentials.groq_api_key_for(@user)
       return [] if key.blank?
 
       client = Clients::GroqClient.new(api_key: key, model: MODEL)
@@ -38,13 +39,6 @@ module Pdf
         { type: "text", text: InvoiceExtractionPrompt.for_vision },
         { type: "image_url", image_url: { url: data_uri } }
       ]
-    end
-
-    def groq_api_key
-      k = Rails.application.credentials.groq_api_key
-      k.presence || ENV["GROQ_API_KEY"]
-    rescue NoMethodError
-      ENV["GROQ_API_KEY"]
     end
 
     def run_with_client(client, user_content)

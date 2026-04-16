@@ -17,7 +17,7 @@ RSpec.describe ParseInvoiceDocument do
 
       results = described_class.new(StringIO.new(bytes), filename: "doc.pdf").call
       expect(results).to eq(fake)
-      expect(ParsePdfInvoice).to have_received(:new).with(instance_of(StringIO))
+      expect(ParsePdfInvoice).to have_received(:new).with(instance_of(StringIO), user: nil)
     end
   end
 
@@ -25,7 +25,7 @@ RSpec.describe ParseInvoiceDocument do
     it "delegates to ParseInvoiceImage" do
       fake = [ instance_double(PdfExtractionResult, invoice_number: "Y") ]
       img_parser = instance_double(ParseInvoiceImage, call: fake)
-      allow(ParseInvoiceImage).to receive(:new).with(png, filename: "foto.jpg").and_return(img_parser)
+      allow(ParseInvoiceImage).to receive(:new).with(png, filename: "foto.jpg", user: nil).and_return(img_parser)
 
       results = described_class.new(StringIO.new(png), filename: "foto.jpg").call
       expect(results).to eq(fake)

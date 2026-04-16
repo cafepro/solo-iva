@@ -11,8 +11,9 @@ module Pdf
       Do not repeat, summarize, or re-transcribe the source text — output only valid JSON, no markdown fences.
     TEXT
 
-    def initialize(text, client: nil)
+    def initialize(text, user: nil, client: nil)
       @text            = text
+      @user            = user
       @client_override = client
     end
 
@@ -21,7 +22,7 @@ module Pdf
         return run_with_client(@client_override)
       end
 
-      key = groq_api_key
+      key = Pdf::AiCredentials.groq_api_key_for(@user)
       return [] if key.blank?
 
       [ MODEL, FALLBACK_MODEL ].uniq.each do |model_name|
@@ -42,13 +43,6 @@ module Pdf
     private
 
     attr_reader :text
-
-    def groq_api_key
-      k = Rails.application.credentials.groq_api_key
-      k.presence || ENV["GROQ_API_KEY"]
-    rescue NoMethodError
-      ENV["GROQ_API_KEY"]
-    end
 
     def run_with_client(client)
       response = client.chat_completion(

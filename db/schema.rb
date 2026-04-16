@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,6 +116,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_120000) do
     t.string "billing_province"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
+    t.text "encrypted_gemini_api_key"
+    t.text "encrypted_groq_api_key"
     t.string "encrypted_password", default: "", null: false
     t.string "google_drive_folder_name"
     t.string "google_drive_issued_folder_name"

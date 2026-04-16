@@ -1,0 +1,66 @@
+<% content_for :title, "Integraciones con IA — SoloIVA" %>
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
+<div class="mb-6 max-w-2xl">
+  <p class="text-sm text-gray-500">
+    Configura las claves de los proveedores que usa SoloIVA para extraer datos de PDFs e imágenes al importar facturas.
+    Las claves se guardan <strong>cifradas</strong> y solo las usa tu cuenta.
+    Sin clave de un proveedor, los pasos de IA que lo usen no se ejecutarán (pueden quedar heurísticas básicas en PDF con texto claro).
+  </p>
+</div>
+
+<div class="bg-white rounded-lg border p-6 max-w-2xl">
+  <%= form_with model: @user, url: ai_integrations_path, method: :patch, class: "space-y-8", data: { turbo: false } do |f| %>
+    <%= render "shared/errors", object: @user %>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-800 mb-3">Google Gemini</h2>
+      <p class="text-xs text-gray-500 mb-4">
+        Usado en parte del flujo de visión y texto para interpretar facturas.
+      </p>
+      <div>
+        <%= f.label :gemini_api_key, "Clave API", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.password_field :gemini_api_key, autocomplete: "off", placeholder: "Dejar vacío para no cambiar",
+              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" %>
+        <p class="mt-1 text-xs text-gray-500">
+          <% if @user.gemini_api_key_configured? %>
+            <span class="text-brand-teal-dark font-medium">Guardada.</span> Escribe una nueva solo si quieres sustituirla.
+          <% else %>
+            Sin clave: no se llamará a Gemini hasta que guardes una aquí.
+          <% end %>
+        </p>
+        <label class="mt-2 flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+          <%= check_box_tag "user[remove_gemini_api_key]", "1", false, class: "h-4 w-4 rounded border-gray-300 text-brand-teal" %>
+          <span>Eliminar mi clave de Gemini al guardar</span>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-800 mb-3">Groq</h2>
+      <p class="text-xs text-gray-500 mb-4">
+        Modelos rápidos para extracción estructurada cuando corresponda en el pipeline.
+      </p>
+      <div>
+        <%= f.label :groq_api_key, "Clave API", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.password_field :groq_api_key, autocomplete: "off", placeholder: "Dejar vacío para no cambiar",
+              class: "w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" %>
+        <p class="mt-1 text-xs text-gray-500">
+          <% if @user.groq_api_key_configured? %>
+            <span class="text-brand-teal-dark font-medium">Guardada.</span> Escribe una nueva solo si quieres sustituirla.
+          <% else %>
+            Sin clave: no se llamará a Groq hasta que guardes una aquí.
+          <% end %>
+        </p>
+        <label class="mt-2 flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+          <%= check_box_tag "user[remove_groq_api_key]", "1", false, class: "h-4 w-4 rounded border-gray-300 text-brand-teal" %>
+          <span>Eliminar mi clave de Groq al guardar</span>
+        </label>
+      </div>
+    </section>
+
+    <%= f.submit "Guardar", class: "bg-brand-teal text-white px-5 py-2 rounded text-sm font-medium cursor-pointer hover:bg-brand-teal-dark" %>
+  <% end %>
+</div>

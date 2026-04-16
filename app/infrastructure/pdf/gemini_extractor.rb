@@ -4,8 +4,9 @@ module Pdf
     # Primary model first; on 429/503 or empty JSON, try lite (separate quota pool on free tier).
     MODEL_CHAIN = %w[gemini-2.5-flash gemini-2.5-flash-lite].freeze
 
-    def initialize(text, client: nil)
+    def initialize(text, user: nil, client: nil)
       @text            = text
+      @user            = user
       @client_override = client
     end
 
@@ -14,7 +15,7 @@ module Pdf
         return run_with_client(@client_override)
       end
 
-      key = gemini_api_key
+      key = Pdf::AiCredentials.gemini_api_key_for(@user)
       return [] if key.blank?
 
       MODEL_CHAIN.each do |model|
@@ -35,12 +36,6 @@ module Pdf
     private
 
     attr_reader :text
-
-    def gemini_api_key
-      Rails.application.credentials.gemini_api_key
-    rescue NoMethodError
-      nil
-    end
 
     def run_with_client(client)
       response = client.generate_content(InvoiceExtractionPrompt.build(text))
