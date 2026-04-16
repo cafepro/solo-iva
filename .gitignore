@@ -56,6 +56,5 @@ yarn-error.log
 /storage/*
 !/storage/.keep
 
-
 # Ignore kamal secrets
 .kamal/*
