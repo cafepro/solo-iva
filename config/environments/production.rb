@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require Rails.root.join("lib/canonical_host_redirect")
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -74,5 +75,12 @@ Rails.application.configure do
       protocol: ENV.fetch("APP_PROTOCOL", "https")
     }
     config.action_controller.default_url_options[:port] = ENV["APP_PORT"].to_i if ENV["APP_PORT"].present?
+
+    config.middleware.insert_before(
+      ActionDispatch::HostAuthorization,
+      CanonicalHostRedirect,
+      canonical_host: ENV.fetch("APP_HOST"),
+      canonical_scheme: ENV.fetch("APP_PROTOCOL", "https")
+    )
   end
 end

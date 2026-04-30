@@ -22,7 +22,9 @@ servers:
 
 proxy:
   ssl: true
-  host: soloiva.online
+  hosts:
+    - soloiva.online
+    - www.soloiva.online
   app_port: 3000
 
 registry:
