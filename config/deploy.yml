@@ -21,8 +21,8 @@ servers:
     - 213.165.78.57
 
 proxy:
-  ssl: false
-  host: 213.165.78.57
+  ssl: true
+  host: soloiva.online
   app_port: 3000
 
 registry:
@@ -35,12 +35,14 @@ env:
     - RAILS_MASTER_KEY
     - POSTGRES_PASSWORD
   clear:
-    RAILS_FORCE_SSL: false
-    RAILS_ASSUME_SSL: false
+    RAILS_FORCE_SSL: true
+    RAILS_ASSUME_SSL: true
     SOLID_QUEUE_IN_PUMA: true
     DB_HOST: solo_iva-db
-    # Evita ActionDispatch::HostAuthorization con el proxy por IP (ajusta si usas dominio).
-    RAILS_ALLOWED_HOSTS: 213.165.78.57
+    APP_HOST: soloiva.online
+    APP_PROTOCOL: https
+    # Allow the apex domain and www alias through HostAuthorization.
+    RAILS_ALLOWED_HOSTS: soloiva.online,www.soloiva.online
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
