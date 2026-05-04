@@ -27,8 +27,14 @@ class AssignNextInvoiceNumber
   private
 
   def format_number(n)
-    prefix = @user.invoice_number_prefix.presence || "F"
+    prefix = formatted_prefix
     digits = @user.invoice_number_digit_count.to_i.clamp(1, 12)
     "#{prefix}#{n.to_i.to_s.rjust(digits, '0')}"
+  end
+
+  def formatted_prefix
+    prefix = @user.invoice_number_prefix.presence || "F"
+    year = Date.current.year.to_s
+    prefix.end_with?(year) ? prefix : "#{prefix}#{year}"
   end
 end

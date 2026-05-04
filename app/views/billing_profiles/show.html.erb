@@ -90,10 +90,10 @@
 
     <section>
       <h2 class="text-sm font-semibold text-gray-800 mb-3">Numeración facturas emitidas</h2>
-      <p class="text-xs text-gray-500 mb-3">Ej.: prefijo <code class="bg-gray-100 px-1 rounded">F2026</code>, 3 dígitos → F2026001, F2026002… Puedes cambiar el siguiente número si saltas huecos.</p>
+      <p class="text-xs text-gray-500 mb-3">Ej.: prefijo base <code class="bg-gray-100 px-1 rounded">F</code>, 3 dígitos → F2026001, F2026002… El año actual se añade automáticamente detrás del prefijo. Puedes cambiar el siguiente número si saltas huecos.</p>
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <%= f.label :invoice_number_prefix, "Prefijo", class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.label :invoice_number_prefix, "Prefijo base", class: "block text-xs font-medium text-gray-600 mb-1" %>
           <%= f.text_field :invoice_number_prefix, class: "w-full border border-gray-300 rounded px-3 py-2 text-sm" %>
         </div>
         <div>

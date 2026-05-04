@@ -90,7 +90,7 @@ RSpec.describe CreateInvoice do
       it "assigns next sequential number and increments counter" do
         result = described_class.new(user: user, params: auto_params, auto_invoice_number: true).call
         expect(result[:ok]).to be true
-        expect(result[:invoice].invoice_number).to eq("T05")
+        expect(result[:invoice].invoice_number).to eq("T202605")
         expect(user.reload.invoice_number_next).to eq(6)
       end
     end
